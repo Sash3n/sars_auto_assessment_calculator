@@ -77,4 +77,20 @@ describe("ResultsStep", () => {
     await user.type(screen.getByLabelText("SARS assessed tax payable"), "5");
     expect(onSarsAssessedTaxPayableChange).toHaveBeenCalledWith(5);
   });
+
+  it("triggers the browser print dialog when Export / Print is clicked", async () => {
+    const user = userEvent.setup();
+    const printSpy = vi.spyOn(window, "print").mockImplementation(() => {});
+    renderResults();
+
+    await user.click(screen.getByRole("button", { name: "Export / Print" }));
+    expect(printSpy).toHaveBeenCalledTimes(1);
+
+    printSpy.mockRestore();
+  });
+
+  it("renders a print-only summary heading", () => {
+    renderResults();
+    expect(screen.getByText("SARS Auto-Assessment Calculator")).toBeInTheDocument();
+  });
 });
