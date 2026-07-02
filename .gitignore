@@ -40,3 +40,7 @@ docs/PROJECT_SPEC.md
 docs/STITCH_DESIGN_PROMPT.md
 docs/design/
 docs/notes/
+*.pem
+.pnp
+.pnp.*
+.vercel
