@@ -1,0 +1,74 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: sarslight --default, sarsdark --prefersdark;
+}
+
+@plugin "daisyui/theme" {
+  name: "sarslight";
+  default: true;
+  color-scheme: light;
+  --color-base-100: oklch(98% 0.003 247);
+  --color-base-200: oklch(95% 0.005 247);
+  --color-base-300: oklch(90% 0.007 247);
+  --color-base-content: oklch(21% 0.02 264);
+  --color-primary: oklch(52% 0.13 165);
+  --color-primary-content: oklch(97% 0.01 165);
+  --color-secondary: oklch(45% 0.05 240);
+  --color-secondary-content: oklch(97% 0.01 240);
+  --color-accent: oklch(52% 0.13 165);
+  --color-accent-content: oklch(97% 0.01 165);
+  --color-neutral: oklch(30% 0.02 264);
+  --color-neutral-content: oklch(96% 0.01 264);
+  --color-info: oklch(58% 0.12 235);
+  --color-info-content: oklch(97% 0.01 235);
+  --color-success: oklch(52% 0.13 165);
+  --color-success-content: oklch(97% 0.01 165);
+  --color-warning: oklch(75% 0.15 80);
+  --color-warning-content: oklch(20% 0.03 80);
+  --color-error: oklch(55% 0.2 25);
+  --color-error-content: oklch(97% 0.01 25);
+  --radius-box: 0.75rem;
+  --radius-field: 0.5rem;
+}
+
+@plugin "daisyui/theme" {
+  name: "sarsdark";
+  default: false;
+  color-scheme: dark;
+  --color-base-100: oklch(20% 0.015 264);
+  --color-base-200: oklch(17% 0.015 264);
+  --color-base-300: oklch(14% 0.015 264);
+  --color-base-content: oklch(92% 0.01 264);
+  --color-primary: oklch(70% 0.14 165);
+  --color-primary-content: oklch(15% 0.02 165);
+  --color-secondary: oklch(70% 0.05 240);
+  --color-secondary-content: oklch(15% 0.02 240);
+  --color-accent: oklch(70% 0.14 165);
+  --color-accent-content: oklch(15% 0.02 165);
+  --color-neutral: oklch(85% 0.01 264);
+  --color-neutral-content: oklch(15% 0.02 264);
+  --color-info: oklch(70% 0.1 235);
+  --color-info-content: oklch(15% 0.02 235);
+  --color-success: oklch(70% 0.14 165);
+  --color-success-content: oklch(15% 0.02 165);
+  --color-warning: oklch(80% 0.15 80);
+  --color-warning-content: oklch(15% 0.03 80);
+  --color-error: oklch(65% 0.2 25);
+  --color-error-content: oklch(15% 0.01 25);
+  --radius-box: 0.75rem;
+  --radius-field: 0.5rem;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
