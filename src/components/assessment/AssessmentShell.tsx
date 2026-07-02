@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 export type AssessmentStep = {
@@ -49,7 +50,9 @@ export function AssessmentShell({
     <div className="flex min-h-full flex-1">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-base-300 bg-base-100 p-4 md:flex">
         <div className="mb-6 px-2">
-          <p className="text-sm font-semibold tracking-tight">Assessment Center</p>
+          <Link href="/" className="text-sm font-semibold tracking-tight">
+            SARS Auto-Assessment Calculator
+          </Link>
         </div>
         <nav className="flex flex-col gap-1">
           {steps.map((step) => (
@@ -65,7 +68,17 @@ export function AssessmentShell({
       </aside>
 
       <div className="flex flex-1 flex-col pb-20 md:pb-0">
+        <header className="navbar bg-base-100 border-b border-base-300 px-6 md:hidden">
+          <Link href="/" className="text-lg font-semibold tracking-tight">
+            SARS Auto-Assessment Calculator
+          </Link>
+        </header>
+
         {children}
+
+        <footer className="footer footer-center bg-base-100 p-4 text-xs text-base-content/60">
+          <p>Not tax advice. Not affiliated with or endorsed by SARS.</p>
+        </footer>
 
         <nav className="fixed inset-x-0 bottom-0 z-10 flex justify-around border-t border-base-300 bg-base-100 py-2 md:hidden">
           {steps.map((step) => (
