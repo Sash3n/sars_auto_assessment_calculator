@@ -35,8 +35,8 @@ export function DeductionsStep({
         <div className="card-body">
           <h3 className="card-title text-base">Medical expenses</h3>
           <div className="flex flex-wrap gap-4">
-            <label className="form-control max-w-xs">
-              <span className="label-text text-xs">Annual medical scheme contributions</span>
+            <label className="flex flex-col gap-1 max-w-xs">
+              <span className="text-xs">Annual medical scheme contributions</span>
               <input
                 type="number"
                 min={0}
@@ -48,8 +48,8 @@ export function DeductionsStep({
                 }
               />
             </label>
-            <label className="form-control max-w-xs">
-              <span className="label-text text-xs">
+            <label className="flex flex-col gap-1 max-w-xs">
+              <span className="text-xs">
                 Out-of-pocket medical expenses (not covered by your scheme)
               </span>
               <input
@@ -75,8 +75,8 @@ export function DeductionsStep({
             travel allowance).
           </p>
           <div className="flex flex-wrap gap-4">
-            <label className="form-control max-w-xs">
-              <span className="label-text text-xs">Business km travelled</span>
+            <label className="flex flex-col gap-1 max-w-xs">
+              <span className="text-xs">Business km travelled</span>
               <input
                 type="number"
                 min={0}
@@ -86,8 +86,8 @@ export function DeductionsStep({
                 onChange={(e) => onBusinessKmTravelledChange(Number(e.target.value) || 0)}
               />
             </label>
-            <label className="form-control max-w-xs">
-              <span className="label-text text-xs">Rate paid per km</span>
+            <label className="flex flex-col gap-1 max-w-xs">
+              <span className="text-xs">Rate paid per km</span>
               <input
                 type="number"
                 min={0}
@@ -108,8 +108,8 @@ export function DeductionsStep({
         <div className="card-body">
           <h3 className="card-title text-base">Other deductions</h3>
           <div className="flex flex-wrap gap-4">
-            <label className="form-control max-w-xs">
-              <span className="label-text text-xs">
+            <label className="flex flex-col gap-1 max-w-xs">
+              <span className="text-xs">
                 Additional retirement contributions (RA top-ups outside payroll)
               </span>
               <input
@@ -125,8 +125,8 @@ export function DeductionsStep({
                 }
               />
             </label>
-            <label className="form-control max-w-xs">
-              <span className="label-text text-xs">Donations to registered PBOs (s18A)</span>
+            <label className="flex flex-col gap-1 max-w-xs">
+              <span className="text-xs">Donations to registered PBOs (s18A)</span>
               <input
                 type="number"
                 min={0}

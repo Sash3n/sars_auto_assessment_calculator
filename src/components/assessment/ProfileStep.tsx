@@ -28,8 +28,8 @@ export function ProfileStep({
       <div className="card-body">
         <h3 className="card-title text-base">Your profile</h3>
         <div className="flex flex-wrap gap-4">
-          <label className="form-control max-w-xs">
-            <span className="label-text text-xs">Tax year</span>
+          <label className="flex flex-col gap-1 max-w-xs">
+            <span className="text-xs">Tax year</span>
             <select
               className="select select-sm"
               aria-label="Tax year"
@@ -43,8 +43,8 @@ export function ProfileStep({
               ))}
             </select>
           </label>
-          <label className="form-control max-w-xs">
-            <span className="label-text text-xs">Age (as at end of tax year)</span>
+          <label className="flex flex-col gap-1 max-w-xs">
+            <span className="text-xs">Age (as at end of tax year)</span>
             <input
               type="number"
               min={0}
@@ -54,8 +54,8 @@ export function ProfileStep({
               onChange={(e) => onAgeChange(Number(e.target.value) || 0)}
             />
           </label>
-          <label className="form-control max-w-xs">
-            <span className="label-text text-xs">Medical scheme members (you + dependants)</span>
+          <label className="flex flex-col gap-1 max-w-xs">
+            <span className="text-xs">Medical scheme members (you + dependants)</span>
             <input
               type="number"
               min={0}
@@ -73,7 +73,7 @@ export function ProfileStep({
               checked={hasDisability}
               onChange={(e) => onHasDisabilityChange(e.target.checked)}
             />
-            <span className="label-text text-xs">
+            <span className="text-xs">
               You, your spouse or your child has a disability
             </span>
           </label>
