@@ -7,38 +7,44 @@
   name: "sarslight";
   default: true;
   color-scheme: light;
-  --color-base-100: oklch(98% 0.003 247);
-  --color-base-200: oklch(95% 0.005 247);
-  --color-base-300: oklch(90% 0.007 247);
-  --color-base-content: oklch(21% 0.02 264);
-  --color-primary: oklch(52% 0.13 165);
-  --color-primary-content: oklch(97% 0.01 165);
+  --color-base-100: oklch(99% 0.004 285);
+  --color-base-200: oklch(96% 0.012 285);
+  --color-base-300: oklch(91% 0.014 285);
+  --color-base-content: oklch(22% 0.03 275);
+  --color-primary: oklch(46% 0.12 162);
+  --color-primary-content: oklch(97% 0.01 162);
   --color-secondary: oklch(45% 0.05 240);
   --color-secondary-content: oklch(97% 0.01 240);
-  --color-accent: oklch(52% 0.13 165);
-  --color-accent-content: oklch(97% 0.01 165);
+  --color-accent: oklch(46% 0.12 162);
+  --color-accent-content: oklch(97% 0.01 162);
   --color-neutral: oklch(30% 0.02 264);
   --color-neutral-content: oklch(96% 0.01 264);
   --color-info: oklch(58% 0.12 235);
   --color-info-content: oklch(97% 0.01 235);
-  --color-success: oklch(52% 0.13 165);
-  --color-success-content: oklch(97% 0.01 165);
+  --color-success: oklch(46% 0.12 162);
+  --color-success-content: oklch(97% 0.01 162);
   --color-warning: oklch(75% 0.15 80);
   --color-warning-content: oklch(20% 0.03 80);
   --color-error: oklch(55% 0.2 25);
   --color-error-content: oklch(97% 0.01 25);
-  --radius-box: 0.75rem;
+  --radius-selector: 0.75rem;
   --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
 }
 
 @plugin "daisyui/theme" {
   name: "sarsdark";
   default: false;
   color-scheme: dark;
-  --color-base-100: oklch(20% 0.015 264);
-  --color-base-200: oklch(17% 0.015 264);
-  --color-base-300: oklch(14% 0.015 264);
-  --color-base-content: oklch(92% 0.01 264);
+  --color-base-100: oklch(21% 0.02 285);
+  --color-base-200: oklch(18% 0.02 285);
+  --color-base-300: oklch(15% 0.02 285);
+  --color-base-content: oklch(92% 0.01 285);
   --color-primary: oklch(70% 0.14 165);
   --color-primary-content: oklch(15% 0.02 165);
   --color-secondary: oklch(70% 0.05 240);
@@ -55,8 +61,14 @@
   --color-warning-content: oklch(15% 0.03 80);
   --color-error: oklch(65% 0.2 25);
   --color-error-content: oklch(15% 0.01 25);
-  --radius-box: 0.75rem;
+  --radius-selector: 0.75rem;
   --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
 }
 
 :root {
@@ -71,4 +83,10 @@
 
 body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Tabular monospaced figures for currency amounts, so columns align. */
+.money {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
 }

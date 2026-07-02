@@ -4,21 +4,42 @@ import userEvent from "@testing-library/user-event";
 import { PayslipStep, createEmptyPayslips } from "./PayslipStep";
 
 describe("PayslipStep", () => {
-  it("renders a row for all 12 months of the SA tax year", () => {
+  it("renders a card for all 12 months of the SA tax year", () => {
     render(
       <PayslipStep payslips={createEmptyPayslips()} anomalousMonths={[]} onChange={() => {}} />,
     );
     expect(screen.getByText("March")).toBeInTheDocument();
     expect(screen.getByText("February")).toBeInTheDocument();
-    expect(screen.getAllByRole("row")).toHaveLength(13); // header + 12 months
   });
 
-  it("shows an 'unusual' badge only for flagged months", () => {
+  it("shows a Pending badge for months with no data entered", () => {
     render(
-      <PayslipStep payslips={createEmptyPayslips()} anomalousMonths={[11]} onChange={() => {}} />,
+      <PayslipStep payslips={createEmptyPayslips()} anomalousMonths={[]} onChange={() => {}} />,
     );
-    expect(screen.getByText("unusual")).toBeInTheDocument();
-    expect(screen.getAllByText("unusual")).toHaveLength(1);
+    expect(screen.getAllByText("Pending")).toHaveLength(12);
+  });
+
+  it("shows an Entered badge once gross salary is filled in", () => {
+    const payslips = createEmptyPayslips();
+    payslips[0] = { ...payslips[0], grossSalary: 45000 };
+    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
+    expect(screen.getAllByText("Entered")).toHaveLength(1);
+    expect(screen.getAllByText("Pending")).toHaveLength(11);
+  });
+
+  it("shows an Entered badge when only PAYE/UIF/retirement data is filled in, without gross salary", () => {
+    const payslips = createEmptyPayslips();
+    payslips[0] = { ...payslips[0], payeDeducted: 5000, uif: 200, retirementContribution: 1000 };
+    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
+    expect(screen.getAllByText("Entered")).toHaveLength(1);
+    expect(screen.getAllByText("Pending")).toHaveLength(11);
+  });
+
+  it("shows an Unusual badge only for flagged months", () => {
+    const payslips = createEmptyPayslips();
+    payslips[11] = { ...payslips[11], grossSalary: 90000 };
+    render(<PayslipStep payslips={payslips} anomalousMonths={[11]} onChange={() => {}} />);
+    expect(screen.getAllByText("Unusual")).toHaveLength(1);
   });
 
   it("calls onChange with the parsed number when a field is edited", async () => {
