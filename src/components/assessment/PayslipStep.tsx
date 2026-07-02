@@ -21,7 +21,7 @@ const FIELD_LABELS: Record<keyof MonthlyPayslip, string> = {
   grossSalary: "Gross salary",
   payeDeducted: "PAYE deducted",
   uif: "UIF",
-  retirementContribution: "Retirement",
+  retirementContribution: "Retirement contribution",
 };
 
 type PayslipStepProps = {
@@ -30,9 +30,13 @@ type PayslipStepProps = {
   onChange: (index: number, field: keyof MonthlyPayslip, value: number) => void;
 };
 
+function hasAnyData(payslip: MonthlyPayslip): boolean {
+  return Object.values(payslip).some((value) => value > 0);
+}
+
 function monthStatus(payslip: MonthlyPayslip, isAnomalous: boolean) {
   if (isAnomalous) return { label: "Unusual", badgeClass: "badge-warning" };
-  if (payslip.grossSalary > 0) return { label: "Entered", badgeClass: "badge-success" };
+  if (hasAnyData(payslip)) return { label: "Entered", badgeClass: "badge-success" };
   return { label: "Pending", badgeClass: "badge-ghost" };
 }
 
@@ -64,8 +68,8 @@ export function PayslipStep({ payslips, anomalousMonths, onChange }: PayslipStep
 
               {(["grossSalary", "payeDeducted", "uif", "retirementContribution"] as const).map(
                 (field) => (
-                  <label key={field} className="form-control">
-                    <span className="label-text text-xs">{FIELD_LABELS[field]}</span>
+                  <label key={field} className="flex flex-col gap-1">
+                    <span className="text-xs">{FIELD_LABELS[field]}</span>
                     <input
                       type="number"
                       inputMode="decimal"

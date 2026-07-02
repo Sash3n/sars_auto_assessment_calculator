@@ -27,6 +27,14 @@ describe("PayslipStep", () => {
     expect(screen.getAllByText("Pending")).toHaveLength(11);
   });
 
+  it("shows an Entered badge when only PAYE/UIF/retirement data is filled in, without gross salary", () => {
+    const payslips = createEmptyPayslips();
+    payslips[0] = { ...payslips[0], payeDeducted: 5000, uif: 200, retirementContribution: 1000 };
+    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
+    expect(screen.getAllByText("Entered")).toHaveLength(1);
+    expect(screen.getAllByText("Pending")).toHaveLength(11);
+  });
+
   it("shows an Unusual badge only for flagged months", () => {
     const payslips = createEmptyPayslips();
     payslips[11] = { ...payslips[11], grossSalary: 90000 };
