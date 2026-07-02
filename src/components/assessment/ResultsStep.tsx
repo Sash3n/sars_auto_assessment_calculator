@@ -154,6 +154,12 @@ export function ResultsStep({
                   {formatCurrency(result.income.taxableTravelReimbursement)}
                 </td>
               </tr>
+              <tr>
+                <td>Taxable capital gain</td>
+                <td className="money text-right">
+                  {formatCurrency(result.income.taxableCapitalGain)}
+                </td>
+              </tr>
               <tr className="font-semibold">
                 <td>Gross income</td>
                 <td className="money text-right">{formatCurrency(result.income.grossTotal)}</td>

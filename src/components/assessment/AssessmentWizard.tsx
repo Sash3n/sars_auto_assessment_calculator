@@ -35,6 +35,9 @@ type FormState = {
   totalHomeAreaSqm: number;
   monthsHomeOfficeUsed: number;
   totalHomeExpenses: number;
+  propertyDisposalProceeds: number;
+  propertyDisposalBaseCost: number;
+  isPrimaryResidenceDisposal: boolean;
   sarsAssessedTaxPayable: number | undefined;
   payslips: MonthlyPayslip[];
   rentalProperties: RentalProperty[];
@@ -58,6 +61,9 @@ function createInitialState(): FormState {
     totalHomeAreaSqm: 0,
     monthsHomeOfficeUsed: 0,
     totalHomeExpenses: 0,
+    propertyDisposalProceeds: 0,
+    propertyDisposalBaseCost: 0,
+    isPrimaryResidenceDisposal: false,
     sarsAssessedTaxPayable: undefined,
     payslips: createEmptyPayslips(),
     rentalProperties: [],
@@ -96,6 +102,9 @@ export function AssessmentWizard() {
         totalHomeAreaSqm: form.totalHomeAreaSqm,
         monthsHomeOfficeUsed: form.monthsHomeOfficeUsed,
         totalHomeExpenses: form.totalHomeExpenses,
+        propertyDisposalProceeds: form.propertyDisposalProceeds,
+        propertyDisposalBaseCost: form.propertyDisposalBaseCost,
+        isPrimaryResidenceDisposal: form.isPrimaryResidenceDisposal,
         sarsAssessedTaxPayable: form.sarsAssessedTaxPayable,
       }),
     [form],
@@ -143,6 +152,9 @@ export function AssessmentWizard() {
             rentalProperties={form.rentalProperties}
             freelanceIncome={form.freelanceIncome}
             interestIncome={form.interestIncome}
+            propertyDisposalProceeds={form.propertyDisposalProceeds}
+            propertyDisposalBaseCost={form.propertyDisposalBaseCost}
+            isPrimaryResidenceDisposal={form.isPrimaryResidenceDisposal}
             onRentalPropertiesChange={(rentalProperties) =>
               setForm((prev) => ({ ...prev, rentalProperties }))
             }
@@ -151,6 +163,15 @@ export function AssessmentWizard() {
             }
             onInterestIncomeChange={(interestIncome) =>
               setForm((prev) => ({ ...prev, interestIncome }))
+            }
+            onPropertyDisposalProceedsChange={(propertyDisposalProceeds) =>
+              setForm((prev) => ({ ...prev, propertyDisposalProceeds }))
+            }
+            onPropertyDisposalBaseCostChange={(propertyDisposalBaseCost) =>
+              setForm((prev) => ({ ...prev, propertyDisposalBaseCost }))
+            }
+            onIsPrimaryResidenceDisposalChange={(isPrimaryResidenceDisposal) =>
+              setForm((prev) => ({ ...prev, isPrimaryResidenceDisposal }))
             }
           />
         )}
