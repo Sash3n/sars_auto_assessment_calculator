@@ -31,6 +31,10 @@ type FormState = {
   donations: number;
   businessKmTravelled: number;
   travelReimbursementRatePerKm: number;
+  homeOfficeAreaSqm: number;
+  totalHomeAreaSqm: number;
+  monthsHomeOfficeUsed: number;
+  totalHomeExpenses: number;
   sarsAssessedTaxPayable: number | undefined;
   payslips: MonthlyPayslip[];
   rentalProperties: RentalProperty[];
@@ -50,6 +54,10 @@ function createInitialState(): FormState {
     donations: 0,
     businessKmTravelled: 0,
     travelReimbursementRatePerKm: 0,
+    homeOfficeAreaSqm: 0,
+    totalHomeAreaSqm: 0,
+    monthsHomeOfficeUsed: 0,
+    totalHomeExpenses: 0,
     sarsAssessedTaxPayable: undefined,
     payslips: createEmptyPayslips(),
     rentalProperties: [],
@@ -84,6 +92,10 @@ export function AssessmentWizard() {
         donations: form.donations,
         businessKmTravelled: form.businessKmTravelled,
         travelReimbursementRatePerKm: form.travelReimbursementRatePerKm,
+        homeOfficeAreaSqm: form.homeOfficeAreaSqm,
+        totalHomeAreaSqm: form.totalHomeAreaSqm,
+        monthsHomeOfficeUsed: form.monthsHomeOfficeUsed,
+        totalHomeExpenses: form.totalHomeExpenses,
         sarsAssessedTaxPayable: form.sarsAssessedTaxPayable,
       }),
     [form],
@@ -151,6 +163,10 @@ export function AssessmentWizard() {
             donations={form.donations}
             businessKmTravelled={form.businessKmTravelled}
             travelReimbursementRatePerKm={form.travelReimbursementRatePerKm}
+            homeOfficeAreaSqm={form.homeOfficeAreaSqm}
+            totalHomeAreaSqm={form.totalHomeAreaSqm}
+            monthsHomeOfficeUsed={form.monthsHomeOfficeUsed}
+            totalHomeExpenses={form.totalHomeExpenses}
             onAnnualMedicalContributionsChange={(annualMedicalContributions) =>
               setForm((prev) => ({ ...prev, annualMedicalContributions }))
             }
@@ -166,6 +182,18 @@ export function AssessmentWizard() {
             }
             onTravelReimbursementRatePerKmChange={(travelReimbursementRatePerKm) =>
               setForm((prev) => ({ ...prev, travelReimbursementRatePerKm }))
+            }
+            onHomeOfficeAreaSqmChange={(homeOfficeAreaSqm) =>
+              setForm((prev) => ({ ...prev, homeOfficeAreaSqm }))
+            }
+            onTotalHomeAreaSqmChange={(totalHomeAreaSqm) =>
+              setForm((prev) => ({ ...prev, totalHomeAreaSqm }))
+            }
+            onMonthsHomeOfficeUsedChange={(monthsHomeOfficeUsed) =>
+              setForm((prev) => ({ ...prev, monthsHomeOfficeUsed }))
+            }
+            onTotalHomeExpensesChange={(totalHomeExpenses) =>
+              setForm((prev) => ({ ...prev, totalHomeExpenses }))
             }
           />
         )}

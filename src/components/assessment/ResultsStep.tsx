@@ -165,6 +165,12 @@ export function ResultsStep({
                 </td>
               </tr>
               <tr>
+                <td>Less: home office deduction</td>
+                <td className="money text-right">
+                  -{formatCurrency(result.deductions.homeOfficeDeductible)}
+                </td>
+              </tr>
+              <tr>
                 <td>Less: donations deduction</td>
                 <td className="money text-right">
                   -{formatCurrency(result.deductions.donationsDeductible)}

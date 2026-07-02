@@ -126,4 +126,26 @@ describe("assessTax (2025/26 golden values)", () => {
     expect(withCredit.additionalMedicalCredit).toBeGreaterThan(0);
     expect(withCredit.taxPayable).toBeLessThan(withoutCredit.taxPayable);
   });
+
+  it("deducts the apportioned home office expense from taxable income", () => {
+    const result = assessTax({
+      age: 35,
+      payslips: flatSalaryPayslips(400_000),
+      homeOfficeAreaSqm: 15,
+      totalHomeAreaSqm: 150,
+      monthsHomeOfficeUsed: 12,
+      totalHomeExpenses: 120_000,
+    });
+
+    // 15/150 * 12/12 * 120 000 = 12 000
+    expect(result.deductions.homeOfficeDeductible).toBeCloseTo(12_000, 2);
+    expect(result.taxableIncome).toBeCloseTo(388_000, 2);
+    expect(result.hasHomeOfficeDeduction).toBe(true);
+  });
+
+  it("does not flag a home office deduction when none was entered", () => {
+    const result = assessTax({ age: 35, payslips: flatSalaryPayslips(400_000) });
+    expect(result.deductions.homeOfficeDeductible).toBe(0);
+    expect(result.hasHomeOfficeDeduction).toBe(false);
+  });
 });

@@ -5,6 +5,7 @@ import { isLikelyProvisionalTaxpayer } from "./provisional-tax";
 import { calculateMedicalCredit, calculateRebate } from "./rebates";
 import { calculateAdditionalMedicalCredit } from "./medical";
 import { calculateTaxableTravelReimbursement } from "./travel";
+import { calculateHomeOfficeDeduction } from "./homeOffice";
 import { summarizePayslips, type MonthlyPayslip } from "./payslips";
 import { TAX_YEAR_TABLES, DEFAULT_TAX_YEAR, type TaxYearTable } from "./tax-tables";
 
@@ -30,6 +31,14 @@ export type AssessmentInput = {
   businessKmTravelled?: number;
   /** Rate per km the employer actually paid */
   travelReimbursementRatePerKm?: number;
+  /** Floor area of a dedicated home office, in square metres */
+  homeOfficeAreaSqm?: number;
+  /** Total floor area of the home, in square metres */
+  totalHomeAreaSqm?: number;
+  /** Number of months in the tax year the home office was used for work */
+  monthsHomeOfficeUsed?: number;
+  /** Total qualifying home running costs for the year */
+  totalHomeExpenses?: number;
   /** Manually entered SARS ITA34 tax payable, for the comparison view */
   sarsAssessedTaxPayable?: number;
 };
@@ -48,7 +57,9 @@ export type AssessmentResult = {
     retirementDeductible: number;
     retirementExcess: number;
     donationsDeductible: number;
+    homeOfficeDeductible: number;
   };
+  hasHomeOfficeDeduction: boolean;
   taxableIncome: number;
   grossTax: number;
   rebate: number;
@@ -113,7 +124,14 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
       table: table.retirementDeduction,
     });
 
-  const incomeAfterRetirement = grossTotal - retirementDeductible;
+  const { deductible: homeOfficeDeductible } = calculateHomeOfficeDeduction({
+    officeAreaSqm: input.homeOfficeAreaSqm ?? 0,
+    totalHomeAreaSqm: input.totalHomeAreaSqm ?? 0,
+    monthsUsed: input.monthsHomeOfficeUsed ?? 0,
+    totalHomeExpenses: input.totalHomeExpenses ?? 0,
+  });
+
+  const incomeAfterRetirement = grossTotal - retirementDeductible - homeOfficeDeductible;
   const donations = input.donations ?? 0;
   const donationsDeductible = Math.min(
     donations,
@@ -167,7 +185,9 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
       retirementDeductible,
       retirementExcess,
       donationsDeductible,
+      homeOfficeDeductible,
     },
+    hasHomeOfficeDeduction: homeOfficeDeductible > 0,
     taxableIncome,
     grossTax,
     rebate,
