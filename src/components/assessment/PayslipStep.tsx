@@ -17,61 +17,74 @@ const SA_TAX_YEAR_MONTHS = [
   "February",
 ];
 
+const FIELD_LABELS: Record<keyof MonthlyPayslip, string> = {
+  grossSalary: "Gross salary",
+  payeDeducted: "PAYE deducted",
+  uif: "UIF",
+  retirementContribution: "Retirement",
+};
+
 type PayslipStepProps = {
   payslips: MonthlyPayslip[];
   anomalousMonths: number[];
   onChange: (index: number, field: keyof MonthlyPayslip, value: number) => void;
 };
 
+function monthStatus(payslip: MonthlyPayslip, isAnomalous: boolean) {
+  if (isAnomalous) return { label: "Unusual", badgeClass: "badge-warning" };
+  if (payslip.grossSalary > 0) return { label: "Entered", badgeClass: "badge-success" };
+  return { label: "Pending", badgeClass: "badge-ghost" };
+}
+
 export function PayslipStep({ payslips, anomalousMonths, onChange }: PayslipStepProps) {
   return (
-    <div className="overflow-x-auto">
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Month</th>
-            <th>Gross salary</th>
-            <th>PAYE deducted</th>
-            <th>UIF</th>
-            <th>Retirement contribution</th>
-          </tr>
-        </thead>
-        <tbody>
-          {payslips.map((payslip, index) => (
-            <tr key={SA_TAX_YEAR_MONTHS[index]}>
-              <td className="whitespace-nowrap">
-                {SA_TAX_YEAR_MONTHS[index]}
-                {anomalousMonths.includes(index) && (
-                  <span
-                    className="badge badge-warning badge-sm ml-2"
-                    title="This month deviates more than 25% from your yearly average"
-                  >
-                    unusual
-                  </span>
-                )}
-              </td>
-              {(
-                ["grossSalary", "payeDeducted", "uif", "retirementContribution"] as const
-              ).map((field) => (
-                <td key={field}>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    className="input input-bordered input-sm w-32"
-                    aria-label={`${SA_TAX_YEAR_MONTHS[index]} ${field}`}
-                    value={payslip[field] === 0 ? "" : payslip[field]}
-                    placeholder="0"
-                    onChange={(event) =>
-                      onChange(index, field, Number(event.target.value) || 0)
-                    }
-                  />
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {payslips.map((payslip, index) => {
+        const isAnomalous = anomalousMonths.includes(index);
+        const status = monthStatus(payslip, isAnomalous);
+
+        return (
+          <div
+            key={SA_TAX_YEAR_MONTHS[index]}
+            className={`card bg-base-100 shadow-sm ${
+              isAnomalous ? "ring-1 ring-warning" : ""
+            }`}
+          >
+            <div className="card-body gap-3 p-4">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">{SA_TAX_YEAR_MONTHS[index]}</span>
+                <span className={`badge badge-sm ${status.badgeClass}`}>{status.label}</span>
+              </div>
+
+              {isAnomalous && (
+                <p className="text-xs text-warning-content bg-warning/20 rounded-field px-2 py-1">
+                  Deviates &gt;25% from your yearly average &mdash; bonus month?
+                </p>
+              )}
+
+              {(["grossSalary", "payeDeducted", "uif", "retirementContribution"] as const).map(
+                (field) => (
+                  <label key={field} className="form-control">
+                    <span className="label-text text-xs">{FIELD_LABELS[field]}</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      className="input input-bordered input-sm money"
+                      aria-label={`${SA_TAX_YEAR_MONTHS[index]} ${field}`}
+                      value={payslip[field] === 0 ? "" : payslip[field]}
+                      placeholder="0"
+                      onChange={(event) =>
+                        onChange(index, field, Number(event.target.value) || 0)
+                      }
+                    />
+                  </label>
+                ),
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
