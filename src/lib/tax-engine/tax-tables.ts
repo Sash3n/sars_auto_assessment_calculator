@@ -49,6 +49,15 @@ export type TaxYearTable = {
   travelReimbursement: {
     prescribedRatePerKm: number;
   };
+  /** Capital gains tax on disposals (e.g. selling a rental property) */
+  capitalGains: {
+    /** Portion of the net gain included in taxable income */
+    inclusionRate: number;
+    /** Annual exclusion applied to the net gain before inclusion */
+    annualExclusion: number;
+    /** Additional exclusion for the gain on a primary residence */
+    primaryResidenceExclusion: number;
+  };
 };
 
 /**
@@ -98,6 +107,11 @@ export const TAX_YEAR_2025_26: TaxYearTable = {
   },
   travelReimbursement: {
     prescribedRatePerKm: 4.76,
+  },
+  capitalGains: {
+    inclusionRate: 0.4,
+    annualExclusion: 40_000,
+    primaryResidenceExclusion: 2_000_000,
   },
 };
 
@@ -150,6 +164,13 @@ export const TAX_YEAR_2026_27: TaxYearTable = {
     // Not yet gazetted for 2026/27 at time of writing; carried over from
     // 2025/26 pending SARS's published update.
     prescribedRatePerKm: 4.76,
+  },
+  capitalGains: {
+    inclusionRate: 0.4,
+    // Budget 2026 raised these from R40,000 and R2,000,000 respectively,
+    // effective for disposals from 1 March 2026.
+    annualExclusion: 50_000,
+    primaryResidenceExclusion: 3_000_000,
   },
 };
 
