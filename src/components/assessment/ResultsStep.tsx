@@ -89,6 +89,12 @@ export function ResultsStep({ result }: ResultsStepProps) {
                 <td>Taxable interest</td>
                 <td className="text-right">{formatCurrency(result.income.taxableInterest)}</td>
               </tr>
+              <tr>
+                <td>Taxable travel reimbursement</td>
+                <td className="text-right">
+                  {formatCurrency(result.income.taxableTravelReimbursement)}
+                </td>
+              </tr>
               <tr className="font-semibold">
                 <td>Gross income</td>
                 <td className="text-right">{formatCurrency(result.income.grossTotal)}</td>
@@ -120,6 +126,10 @@ export function ResultsStep({ result }: ResultsStepProps) {
               <tr>
                 <td>Less: medical scheme fees credit</td>
                 <td className="text-right">-{formatCurrency(result.medicalCredit)}</td>
+              </tr>
+              <tr>
+                <td>Less: additional medical expenses credit</td>
+                <td className="text-right">-{formatCurrency(result.additionalMedicalCredit)}</td>
               </tr>
               <tr className="font-semibold">
                 <td>Tax payable</td>

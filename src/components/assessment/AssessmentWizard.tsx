@@ -13,10 +13,16 @@ import { ResultsStep } from "./ResultsStep";
 const STEPS = ["Profile", "Payslips", "Other income", "Results"] as const;
 
 type FormState = {
+  taxYear: string;
   age: number;
   medicalSchemeMembers: number;
+  hasDisability: boolean;
+  annualMedicalContributions: number;
+  outOfPocketMedicalExpenses: number;
   additionalRetirementContributions: number;
   donations: number;
+  businessKmTravelled: number;
+  travelReimbursementRatePerKm: number;
   sarsAssessedTaxPayable: number | undefined;
   payslips: MonthlyPayslip[];
   rentalProperties: RentalProperty[];
@@ -26,10 +32,16 @@ type FormState = {
 
 function createInitialState(): FormState {
   return {
+    taxYear: DEFAULT_TAX_YEAR,
     age: 0,
     medicalSchemeMembers: 0,
+    hasDisability: false,
+    annualMedicalContributions: 0,
+    outOfPocketMedicalExpenses: 0,
     additionalRetirementContributions: 0,
     donations: 0,
+    businessKmTravelled: 0,
+    travelReimbursementRatePerKm: 0,
     sarsAssessedTaxPayable: undefined,
     payslips: createEmptyPayslips(),
     rentalProperties: [],
@@ -50,15 +62,20 @@ export function AssessmentWizard() {
   const result = useMemo(
     () =>
       assessTax({
-        taxYear: DEFAULT_TAX_YEAR,
+        taxYear: form.taxYear,
         age: form.age,
         payslips: form.payslips,
         rentalProperties: form.rentalProperties,
         freelanceIncome: form.freelanceIncome,
         interestIncome: form.interestIncome,
         medicalSchemeMembers: form.medicalSchemeMembers,
+        hasDisability: form.hasDisability,
+        annualMedicalContributions: form.annualMedicalContributions,
+        outOfPocketMedicalExpenses: form.outOfPocketMedicalExpenses,
         additionalRetirementContributions: form.additionalRetirementContributions,
         donations: form.donations,
+        businessKmTravelled: form.businessKmTravelled,
+        travelReimbursementRatePerKm: form.travelReimbursementRatePerKm,
         sarsAssessedTaxPayable: form.sarsAssessedTaxPayable,
       }),
     [form],
@@ -83,19 +100,41 @@ export function AssessmentWizard() {
 
       {step === 0 && (
         <ProfileAndDeductionsStep
+          taxYear={form.taxYear}
           age={form.age}
           medicalSchemeMembers={form.medicalSchemeMembers}
+          hasDisability={form.hasDisability}
+          annualMedicalContributions={form.annualMedicalContributions}
+          outOfPocketMedicalExpenses={form.outOfPocketMedicalExpenses}
           additionalRetirementContributions={form.additionalRetirementContributions}
           donations={form.donations}
+          businessKmTravelled={form.businessKmTravelled}
+          travelReimbursementRatePerKm={form.travelReimbursementRatePerKm}
           sarsAssessedTaxPayable={form.sarsAssessedTaxPayable}
+          onTaxYearChange={(taxYear) => setForm((prev) => ({ ...prev, taxYear }))}
           onAgeChange={(age) => setForm((prev) => ({ ...prev, age }))}
           onMedicalSchemeMembersChange={(medicalSchemeMembers) =>
             setForm((prev) => ({ ...prev, medicalSchemeMembers }))
+          }
+          onHasDisabilityChange={(hasDisability) =>
+            setForm((prev) => ({ ...prev, hasDisability }))
+          }
+          onAnnualMedicalContributionsChange={(annualMedicalContributions) =>
+            setForm((prev) => ({ ...prev, annualMedicalContributions }))
+          }
+          onOutOfPocketMedicalExpensesChange={(outOfPocketMedicalExpenses) =>
+            setForm((prev) => ({ ...prev, outOfPocketMedicalExpenses }))
           }
           onAdditionalRetirementContributionsChange={(additionalRetirementContributions) =>
             setForm((prev) => ({ ...prev, additionalRetirementContributions }))
           }
           onDonationsChange={(donations) => setForm((prev) => ({ ...prev, donations }))}
+          onBusinessKmTravelledChange={(businessKmTravelled) =>
+            setForm((prev) => ({ ...prev, businessKmTravelled }))
+          }
+          onTravelReimbursementRatePerKmChange={(travelReimbursementRatePerKm) =>
+            setForm((prev) => ({ ...prev, travelReimbursementRatePerKm }))
+          }
           onSarsAssessedTaxPayableChange={(sarsAssessedTaxPayable) =>
             setForm((prev) => ({ ...prev, sarsAssessedTaxPayable }))
           }
