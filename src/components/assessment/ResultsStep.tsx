@@ -61,6 +61,19 @@ export function ResultsStep({
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="hidden print:block">
+        <h1 className="text-xl font-semibold">SARS Auto-Assessment Calculator</h1>
+        <p className="text-sm text-base-content/60">
+          Tax year {result.taxYear} &mdash; not tax advice, not affiliated with or endorsed by SARS.
+        </p>
+      </div>
+
+      <div className="flex justify-end print:hidden">
+        <button type="button" className="btn btn-outline btn-sm" onClick={() => window.print()}>
+          Export / Print
+        </button>
+      </div>
+
       <div
         className={`card shadow-sm ${
           isBalanced ? "bg-base-100" : owesSars ? "bg-error/10" : "bg-success/10"

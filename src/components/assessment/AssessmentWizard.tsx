@@ -229,7 +229,7 @@ export function AssessmentWizard() {
           />
         )}
 
-        <div className="flex justify-between pt-2">
+        <div className="flex justify-between pt-2 print:hidden">
           <button
             type="button"
             className="btn btn-ghost"
