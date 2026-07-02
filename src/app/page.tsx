@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-base-200">
@@ -23,9 +25,9 @@ export default function Home() {
               40-business-day correction window closes.
             </p>
             <div className="card-actions justify-end pt-2">
-              <button className="btn btn-primary" disabled>
-                Start assessment (coming soon)
-              </button>
+              <Link href="/assess" className="btn btn-primary">
+                Start assessment
+              </Link>
             </div>
           </div>
         </div>
