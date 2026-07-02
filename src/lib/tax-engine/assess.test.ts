@@ -148,4 +148,31 @@ describe("assessTax (2025/26 golden values)", () => {
     expect(result.deductions.homeOfficeDeductible).toBe(0);
     expect(result.hasHomeOfficeDeduction).toBe(false);
   });
+
+  it("adds the taxable portion of a property disposal capital gain to income", () => {
+    const result = assessTax({
+      age: 35,
+      payslips: flatSalaryPayslips(400_000),
+      propertyDisposalProceeds: 1_000_000,
+      propertyDisposalBaseCost: 600_000,
+      isPrimaryResidenceDisposal: false,
+    });
+
+    // gain 400 000 - 40 000 annual exclusion = 360 000; * 40% = 144 000
+    expect(result.income.taxableCapitalGain).toBeCloseTo(144_000, 2);
+    expect(result.taxableIncome).toBeCloseTo(544_000, 2);
+  });
+
+  it("excludes a primary residence disposal gain under the R2m exclusion", () => {
+    const result = assessTax({
+      age: 35,
+      payslips: flatSalaryPayslips(400_000),
+      propertyDisposalProceeds: 2_500_000,
+      propertyDisposalBaseCost: 500_000,
+      isPrimaryResidenceDisposal: true,
+    });
+
+    expect(result.income.taxableCapitalGain).toBe(0);
+    expect(result.taxableIncome).toBeCloseTo(400_000, 2);
+  });
 });
