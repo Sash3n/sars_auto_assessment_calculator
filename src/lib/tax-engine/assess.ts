@@ -3,6 +3,8 @@ import { calculateRetirementDeduction, calculateTaxableInterest } from "./deduct
 import { calculateNetRentalIncome, type RentalProperty } from "./rental";
 import { isLikelyProvisionalTaxpayer } from "./provisional-tax";
 import { calculateMedicalCredit, calculateRebate } from "./rebates";
+import { calculateAdditionalMedicalCredit } from "./medical";
+import { calculateTaxableTravelReimbursement } from "./travel";
 import { summarizePayslips, type MonthlyPayslip } from "./payslips";
 import { TAX_YEAR_TABLES, DEFAULT_TAX_YEAR, type TaxYearTable } from "./tax-tables";
 
@@ -16,9 +18,18 @@ export type AssessmentInput = {
   freelanceIncome?: number;
   interestIncome?: number;
   medicalSchemeMembers?: number;
+  hasDisability?: boolean;
+  /** Total annual medical scheme contributions, for the s6B additional credit */
+  annualMedicalContributions?: number;
+  /** Qualifying out-of-pocket medical expenses not covered by the scheme */
+  outOfPocketMedicalExpenses?: number;
   /** Retirement contributions paid outside payroll (e.g. a personal RA top-up) */
   additionalRetirementContributions?: number;
   donations?: number;
+  /** Business km reimbursed by an employer per km (not a fixed monthly allowance) */
+  businessKmTravelled?: number;
+  /** Rate per km the employer actually paid */
+  travelReimbursementRatePerKm?: number;
   /** Manually entered SARS ITA34 tax payable, for the comparison view */
   sarsAssessedTaxPayable?: number;
 };
@@ -30,6 +41,7 @@ export type AssessmentResult = {
     rentalNet: number;
     freelance: number;
     taxableInterest: number;
+    taxableTravelReimbursement: number;
     grossTotal: number;
   };
   deductions: {
@@ -41,6 +53,7 @@ export type AssessmentResult = {
   grossTax: number;
   rebate: number;
   medicalCredit: number;
+  additionalMedicalCredit: number;
   taxPayable: number;
   payeAlreadyPaid: number;
   /** Positive = amount owed to SARS, negative = refund due from SARS */
@@ -75,9 +88,18 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
     input.age,
     table.interestExemption,
   );
+  const taxableTravelReimbursement = calculateTaxableTravelReimbursement(
+    input.businessKmTravelled ?? 0,
+    input.travelReimbursementRatePerKm ?? 0,
+    table.travelReimbursement,
+  );
 
   const grossTotal =
-    payslipSummary.totalGrossSalary + rental.netIncome + freelanceIncome + taxableInterest;
+    payslipSummary.totalGrossSalary +
+    rental.netIncome +
+    freelanceIncome +
+    taxableInterest +
+    taxableTravelReimbursement;
 
   const totalRetirementContributions =
     payslipSummary.totalRetirementContribution +
@@ -106,8 +128,20 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
     input.medicalSchemeMembers ?? 0,
     table.medicalCredit,
   );
+  const additionalMedicalCredit = calculateAdditionalMedicalCredit({
+    age: input.age,
+    hasDisability: input.hasDisability ?? false,
+    annualContributions: input.annualMedicalContributions ?? 0,
+    annualMedicalCredit: medicalCredit,
+    outOfPocketExpenses: input.outOfPocketMedicalExpenses ?? 0,
+    taxableIncomeBeforeCredit: taxableIncome,
+    table: table.additionalMedicalCredit,
+  });
 
-  const taxPayable = Math.max(grossTax - rebate - medicalCredit, 0);
+  const taxPayable = Math.max(
+    grossTax - rebate - medicalCredit - additionalMedicalCredit,
+    0,
+  );
   const payeAlreadyPaid = payslipSummary.totalPayeDeducted;
   const balance = taxPayable - payeAlreadyPaid;
 
@@ -126,6 +160,7 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
       rentalNet: rental.netIncome,
       freelance: freelanceIncome,
       taxableInterest,
+      taxableTravelReimbursement,
       grossTotal,
     },
     deductions: {
@@ -137,6 +172,7 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
     grossTax,
     rebate,
     medicalCredit,
+    additionalMedicalCredit,
     taxPayable,
     payeAlreadyPaid,
     balance,

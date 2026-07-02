@@ -96,4 +96,34 @@ describe("assessTax (2025/26 golden values)", () => {
     expect(result.taxableIncome).toBeGreaterThanOrEqual(0);
     expect(result.taxPayable).toBeGreaterThanOrEqual(0);
   });
+
+  it("adds the taxable excess of a reimbursive travel allowance to income", () => {
+    const result = assessTax({
+      age: 35,
+      payslips: flatSalaryPayslips(400_000),
+      businessKmTravelled: 10_000,
+      travelReimbursementRatePerKm: 6, // 1.24 above the 4.76 prescribed rate
+    });
+
+    expect(result.income.taxableTravelReimbursement).toBeCloseTo(12_400, 2);
+    expect(result.taxableIncome).toBeCloseTo(412_400, 2);
+  });
+
+  it("subtracts the additional medical expenses credit from tax payable for age 65+", () => {
+    const withCredit = assessTax({
+      age: 70,
+      payslips: flatSalaryPayslips(400_000),
+      medicalSchemeMembers: 2,
+      annualMedicalContributions: 40_000,
+      outOfPocketMedicalExpenses: 10_000,
+    });
+    const withoutCredit = assessTax({
+      age: 70,
+      payslips: flatSalaryPayslips(400_000),
+      medicalSchemeMembers: 2,
+    });
+
+    expect(withCredit.additionalMedicalCredit).toBeGreaterThan(0);
+    expect(withCredit.taxPayable).toBeLessThan(withoutCredit.taxPayable);
+  });
 });
