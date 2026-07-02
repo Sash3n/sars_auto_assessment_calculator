@@ -40,7 +40,7 @@ export function DeductionsStep({
               <input
                 type="number"
                 min={0}
-                className="input input-bordered input-sm"
+                className="input input-sm"
                 aria-label="Annual medical scheme contributions"
                 value={annualMedicalContributions === 0 ? "" : annualMedicalContributions}
                 onChange={(e) =>
@@ -55,7 +55,7 @@ export function DeductionsStep({
               <input
                 type="number"
                 min={0}
-                className="input input-bordered input-sm"
+                className="input input-sm"
                 aria-label="Out-of-pocket medical expenses"
                 value={outOfPocketMedicalExpenses === 0 ? "" : outOfPocketMedicalExpenses}
                 onChange={(e) =>
@@ -80,7 +80,7 @@ export function DeductionsStep({
               <input
                 type="number"
                 min={0}
-                className="input input-bordered input-sm"
+                className="input input-sm"
                 aria-label="Business km travelled"
                 value={businessKmTravelled === 0 ? "" : businessKmTravelled}
                 onChange={(e) => onBusinessKmTravelledChange(Number(e.target.value) || 0)}
@@ -92,7 +92,7 @@ export function DeductionsStep({
                 type="number"
                 min={0}
                 step="0.01"
-                className="input input-bordered input-sm"
+                className="input input-sm"
                 aria-label="Rate paid per km"
                 value={travelReimbursementRatePerKm === 0 ? "" : travelReimbursementRatePerKm}
                 onChange={(e) =>
@@ -115,7 +115,7 @@ export function DeductionsStep({
               <input
                 type="number"
                 min={0}
-                className="input input-bordered input-sm"
+                className="input input-sm"
                 aria-label="Additional retirement contributions"
                 value={
                   additionalRetirementContributions === 0 ? "" : additionalRetirementContributions
@@ -130,7 +130,7 @@ export function DeductionsStep({
               <input
                 type="number"
                 min={0}
-                className="input input-bordered input-sm"
+                className="input input-sm"
                 aria-label="Donations"
                 value={donations === 0 ? "" : donations}
                 onChange={(e) => onDonationsChange(Number(e.target.value) || 0)}

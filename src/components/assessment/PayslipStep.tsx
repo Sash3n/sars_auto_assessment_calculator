@@ -70,7 +70,7 @@ export function PayslipStep({ payslips, anomalousMonths, onChange }: PayslipStep
                       type="number"
                       inputMode="decimal"
                       min={0}
-                      className="input input-bordered input-sm money"
+                      className="input input-sm money"
                       aria-label={`${SA_TAX_YEAR_MONTHS[index]} ${field}`}
                       value={payslip[field] === 0 ? "" : payslip[field]}
                       placeholder="0"

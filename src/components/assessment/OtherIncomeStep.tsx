@@ -52,7 +52,7 @@ export function OtherIncomeStep({
                 <input
                   type="number"
                   min={0}
-                  className="input input-bordered input-sm"
+                  className="input input-sm"
                   aria-label={`Property ${index + 1} income`}
                   value={property.income === 0 ? "" : property.income}
                   onChange={(e) => updateProperty(index, "income", Number(e.target.value) || 0)}
@@ -63,7 +63,7 @@ export function OtherIncomeStep({
                 <input
                   type="number"
                   min={0}
-                  className="input input-bordered input-sm"
+                  className="input input-sm"
                   aria-label={`Property ${index + 1} expenses`}
                   value={property.expenses === 0 ? "" : property.expenses}
                   onChange={(e) =>
@@ -77,7 +77,7 @@ export function OtherIncomeStep({
                   type="number"
                   min={0}
                   max={100}
-                  className="input input-bordered input-sm"
+                  className="input input-sm"
                   aria-label={`Property ${index + 1} area let percent`}
                   value={property.areaLetFraction * 100}
                   onChange={(e) =>
@@ -91,7 +91,7 @@ export function OtherIncomeStep({
                   type="number"
                   min={0}
                   max={100}
-                  className="input input-bordered input-sm"
+                  className="input input-sm"
                   aria-label={`Property ${index + 1} months let percent`}
                   value={property.monthsLetFraction * 100}
                   onChange={(e) =>
@@ -132,7 +132,7 @@ export function OtherIncomeStep({
             <input
               type="number"
               min={0}
-              className="input input-bordered input-sm"
+              className="input input-sm"
               aria-label="Freelance income"
               value={freelanceIncome === 0 ? "" : freelanceIncome}
               onChange={(e) => onFreelanceIncomeChange(Number(e.target.value) || 0)}
@@ -149,7 +149,7 @@ export function OtherIncomeStep({
             <input
               type="number"
               min={0}
-              className="input input-bordered input-sm"
+              className="input input-sm"
               aria-label="Interest income"
               value={interestIncome === 0 ? "" : interestIncome}
               onChange={(e) => onInterestIncomeChange(Number(e.target.value) || 0)}

@@ -31,7 +31,7 @@ export function ProfileStep({
           <label className="form-control max-w-xs">
             <span className="label-text text-xs">Tax year</span>
             <select
-              className="select select-bordered select-sm"
+              className="select select-sm"
               aria-label="Tax year"
               value={taxYear}
               onChange={(e) => onTaxYearChange(e.target.value)}
@@ -48,7 +48,7 @@ export function ProfileStep({
             <input
               type="number"
               min={0}
-              className="input input-bordered input-sm"
+              className="input input-sm"
               aria-label="Age"
               value={age === 0 ? "" : age}
               onChange={(e) => onAgeChange(Number(e.target.value) || 0)}
@@ -59,7 +59,7 @@ export function ProfileStep({
             <input
               type="number"
               min={0}
-              className="input input-bordered input-sm"
+              className="input input-sm"
               aria-label="Medical scheme members"
               value={medicalSchemeMembers === 0 ? "" : medicalSchemeMembers}
               onChange={(e) => onMedicalSchemeMembersChange(Number(e.target.value) || 0)}

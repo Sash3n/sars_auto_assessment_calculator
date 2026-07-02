@@ -220,7 +220,7 @@ export function ResultsStep({
             <input
               type="number"
               min={0}
-              className="input input-bordered input-sm money"
+              className="input input-sm money"
               aria-label="SARS assessed tax payable"
               value={sarsAssessedTaxPayable ?? ""}
               onChange={(e) =>
