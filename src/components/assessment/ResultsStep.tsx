@@ -1,6 +1,7 @@
 "use client";
 
 import type { AssessmentResult } from "@/lib/tax-engine/assess";
+import { findBracketIndex } from "@/lib/tax-engine/brackets";
 import { TAX_YEAR_TABLES } from "@/lib/tax-engine/tax-tables";
 import { formatCurrency } from "@/lib/format";
 
@@ -12,7 +13,7 @@ type ResultsStepProps = {
 
 function TaxBracketBar({ taxableIncome, taxYear }: { taxableIncome: number; taxYear: string }) {
   const brackets = TAX_YEAR_TABLES[taxYear]?.brackets ?? [];
-  const reachedIndex = brackets.findIndex((b) => taxableIncome >= b.min && taxableIncome < b.max);
+  const reachedIndex = findBracketIndex(taxableIncome, brackets);
 
   return (
     <div>
@@ -215,8 +216,8 @@ export function ResultsStep({
             Enter the &ldquo;tax payable&rdquo; figure from your SARS ITA34 to see the
             difference against this calculation.
           </p>
-          <label className="form-control max-w-xs">
-            <span className="label-text text-xs">SARS assessed tax payable</span>
+          <label className="flex flex-col gap-1 max-w-xs">
+            <span className="text-xs">SARS assessed tax payable</span>
             <input
               type="number"
               min={0}
