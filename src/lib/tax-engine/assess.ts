@@ -6,6 +6,7 @@ import { calculateMedicalCredit, calculateRebate } from "./rebates";
 import { calculateAdditionalMedicalCredit } from "./medical";
 import { calculateTaxableTravelReimbursement } from "./travel";
 import { calculateHomeOfficeDeduction } from "./homeOffice";
+import { calculateTaxableCapitalGain } from "./capitalGains";
 import { summarizePayslips, type MonthlyPayslip } from "./payslips";
 import { TAX_YEAR_TABLES, DEFAULT_TAX_YEAR, type TaxYearTable } from "./tax-tables";
 
@@ -39,6 +40,11 @@ export type AssessmentInput = {
   monthsHomeOfficeUsed?: number;
   /** Total qualifying home running costs for the year */
   totalHomeExpenses?: number;
+  /** Amount received for a property disposal (e.g. selling a rental property) */
+  propertyDisposalProceeds?: number;
+  /** Purchase price plus qualifying improvements and acquisition/disposal costs */
+  propertyDisposalBaseCost?: number;
+  isPrimaryResidenceDisposal?: boolean;
   /** Manually entered SARS ITA34 tax payable, for the comparison view */
   sarsAssessedTaxPayable?: number;
 };
@@ -51,6 +57,7 @@ export type AssessmentResult = {
     freelance: number;
     taxableInterest: number;
     taxableTravelReimbursement: number;
+    taxableCapitalGain: number;
     grossTotal: number;
   };
   deductions: {
@@ -104,13 +111,20 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
     input.travelReimbursementRatePerKm ?? 0,
     table.travelReimbursement,
   );
+  const { taxableCapitalGain } = calculateTaxableCapitalGain({
+    proceeds: input.propertyDisposalProceeds ?? 0,
+    baseCost: input.propertyDisposalBaseCost ?? 0,
+    isPrimaryResidence: input.isPrimaryResidenceDisposal ?? false,
+    table: table.capitalGains,
+  });
 
   const grossTotal =
     payslipSummary.totalGrossSalary +
     rental.netIncome +
     freelanceIncome +
     taxableInterest +
-    taxableTravelReimbursement;
+    taxableTravelReimbursement +
+    taxableCapitalGain;
 
   const totalRetirementContributions =
     payslipSummary.totalRetirementContribution +
@@ -179,6 +193,7 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
       freelance: freelanceIncome,
       taxableInterest,
       taxableTravelReimbursement,
+      taxableCapitalGain,
       grossTotal,
     },
     deductions: {
