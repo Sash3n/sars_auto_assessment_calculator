@@ -1,7 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PayslipStep, createEmptyPayslips } from "./PayslipStep";
+
+const recognizeMock = vi.fn();
+
+vi.mock("tesseract.js", () => ({
+  createWorker: vi.fn(async () => ({
+    recognize: recognizeMock,
+    terminate: vi.fn(),
+  })),
+}));
 
 describe("PayslipStep", () => {
   it("renders a card for all 12 months of the SA tax year", () => {
@@ -53,5 +62,24 @@ describe("PayslipStep", () => {
     await user.type(marchGross, "5");
 
     expect(onChange).toHaveBeenCalledWith(0, "grossSalary", 5);
+  });
+
+  it("wires a scanned amount assigned in March's OCR upload to March's onChange", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    recognizeMock.mockResolvedValue({ data: { text: "Pay as you Earn 3 506.27" } });
+
+    render(
+      <PayslipStep payslips={createEmptyPayslips()} anomalousMonths={[]} onChange={onChange} />,
+    );
+
+    const marchUpload = screen.getAllByLabelText("Upload payslip image")[0];
+    const file = new File(["fake"], "payslip.png", { type: "image/png" });
+    await user.upload(marchUpload, file);
+
+    await waitFor(() => screen.getAllByText("PAYE")[0]);
+    await user.click(screen.getAllByText("PAYE")[0]);
+
+    expect(onChange).toHaveBeenCalledWith(0, "payeDeducted", 3_506.27);
   });
 });
