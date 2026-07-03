@@ -1,6 +1,7 @@
 "use client";
 
 import type { MonthlyPayslip } from "@/lib/tax-engine/payslips";
+import { PayslipOcrUpload } from "./PayslipOcrUpload";
 
 const SA_TAX_YEAR_MONTHS = [
   "March",
@@ -85,6 +86,17 @@ export function PayslipStep({ payslips, anomalousMonths, onChange }: PayslipStep
                   </label>
                 ),
               )}
+
+              <details className="mt-1">
+                <summary className="cursor-pointer text-xs text-primary">
+                  Scan a payslip image instead
+                </summary>
+                <div className="pt-2">
+                  <PayslipOcrUpload
+                    onAssign={(field, value) => onChange(index, field, value)}
+                  />
+                </div>
+              </details>
             </div>
           </div>
         );
