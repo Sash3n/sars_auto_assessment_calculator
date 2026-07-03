@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { summarizePayslips, type MonthlyPayslip } from "@/lib/tax-engine/payslips";
+import { summarizePayslips, type NumericPayslipField } from "@/lib/tax-engine/payslips";
 import { loadStoredFormState, saveFormState } from "@/lib/assessmentStorage";
 import { AssessmentShell, type AssessmentStep } from "./AssessmentShell";
 import { Stepper } from "./Stepper";
@@ -54,10 +54,17 @@ export function AssessmentWizard() {
 
   const result = useMemo(() => computeAssessmentResult(form), [form]);
 
-  function updatePayslipField(index: number, field: keyof MonthlyPayslip, value: number) {
+  function updatePayslipField(index: number, field: NumericPayslipField, value: number) {
     setForm((prev) => ({
       ...prev,
       payslips: prev.payslips.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
+    }));
+  }
+
+  function updatePayslipEmployer(index: number, employer: string) {
+    setForm((prev) => ({
+      ...prev,
+      payslips: prev.payslips.map((p, i) => (i === index ? { ...p, employer } : p)),
     }));
   }
 
@@ -90,6 +97,7 @@ export function AssessmentWizard() {
             payslips={form.payslips}
             anomalousMonths={anomalousMonths}
             onChange={updatePayslipField}
+            onEmployerChange={updatePayslipEmployer}
           />
         )}
 

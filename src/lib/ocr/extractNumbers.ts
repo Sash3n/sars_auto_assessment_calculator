@@ -9,7 +9,10 @@ export type ExtractedNumber = {
 
 // Requires a 2-decimal-place suffix so we only pick up currency-shaped
 // amounts, not page numbers, dates, or other stray integers in OCR text.
-const AMOUNT_PATTERN = /R?\s?\d{1,3}(?:[,\s]\d{3})*\.\d{2}/g;
+// The integer part is either grouped with thousands separators (11,978 /
+// 4 200) or, since some real payslip printouts omit the separator
+// entirely, one plain run of digits (6449) — either is accepted.
+const AMOUNT_PATTERN = /R?\s?(?:\d{1,3}(?:[,\s]\d{3})+|\d+)\.\d{2}/g;
 
 /**
  * Scans OCR'd payslip text for currency-shaped amounts, line by line, so a

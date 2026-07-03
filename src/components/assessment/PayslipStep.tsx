@@ -1,6 +1,11 @@
 "use client";
 
-import type { MonthlyPayslip } from "@/lib/tax-engine/payslips";
+import {
+  NUMERIC_PAYSLIP_FIELDS,
+  hasPayslipData,
+  type MonthlyPayslip,
+  type NumericPayslipField,
+} from "@/lib/tax-engine/payslips";
 import { PayslipOcrUpload } from "./PayslipOcrUpload";
 
 const SA_TAX_YEAR_MONTHS = [
@@ -18,30 +23,35 @@ const SA_TAX_YEAR_MONTHS = [
   "February",
 ];
 
-const FIELD_LABELS: Record<keyof MonthlyPayslip, string> = {
+const FIELD_LABELS: Record<NumericPayslipField, string> = {
   grossSalary: "Gross salary",
   payeDeducted: "PAYE deducted",
   uif: "UIF",
   retirementContribution: "Retirement contribution",
+  employerRetirementFringeBenefit: "Employer retirement fringe benefit",
+  generalFringeBenefit: "General fringe benefit",
 };
 
 type PayslipStepProps = {
   payslips: MonthlyPayslip[];
   anomalousMonths: number[];
-  onChange: (index: number, field: keyof MonthlyPayslip, value: number) => void;
+  onChange: (index: number, field: NumericPayslipField, value: number) => void;
+  onEmployerChange: (index: number, employer: string) => void;
 };
 
-function hasAnyData(payslip: MonthlyPayslip): boolean {
-  return Object.values(payslip).some((value) => value > 0);
-}
 
 function monthStatus(payslip: MonthlyPayslip, isAnomalous: boolean) {
   if (isAnomalous) return { label: "Unusual", badgeClass: "badge-warning" };
-  if (hasAnyData(payslip)) return { label: "Entered", badgeClass: "badge-success" };
+  if (hasPayslipData(payslip)) return { label: "Entered", badgeClass: "badge-success" };
   return { label: "Pending", badgeClass: "badge-ghost" };
 }
 
-export function PayslipStep({ payslips, anomalousMonths, onChange }: PayslipStepProps) {
+export function PayslipStep({
+  payslips,
+  anomalousMonths,
+  onChange,
+  onEmployerChange,
+}: PayslipStepProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {payslips.map((payslip, index) => {
@@ -67,25 +77,33 @@ export function PayslipStep({ payslips, anomalousMonths, onChange }: PayslipStep
                 </p>
               )}
 
-              {(["grossSalary", "payeDeducted", "uif", "retirementContribution"] as const).map(
-                (field) => (
-                  <label key={field} className="flex flex-col gap-1">
-                    <span className="text-xs">{FIELD_LABELS[field]}</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      min={0}
-                      className="input input-sm money"
-                      aria-label={`${SA_TAX_YEAR_MONTHS[index]} ${field}`}
-                      value={payslip[field] === 0 ? "" : payslip[field]}
-                      placeholder="0"
-                      onChange={(event) =>
-                        onChange(index, field, Number(event.target.value) || 0)
-                      }
-                    />
-                  </label>
-                ),
-              )}
+              <label className="flex flex-col gap-1">
+                <span className="text-xs">Employer</span>
+                <input
+                  type="text"
+                  className="input input-sm"
+                  aria-label={`${SA_TAX_YEAR_MONTHS[index]} employer`}
+                  value={payslip.employer ?? ""}
+                  placeholder="e.g. Acme Ltd"
+                  onChange={(event) => onEmployerChange(index, event.target.value)}
+                />
+              </label>
+
+              {NUMERIC_PAYSLIP_FIELDS.map((field) => (
+                <label key={field} className="flex flex-col gap-1">
+                  <span className="text-xs">{FIELD_LABELS[field]}</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    className="input input-sm money"
+                    aria-label={`${SA_TAX_YEAR_MONTHS[index]} ${field}`}
+                    value={payslip[field] === 0 || !payslip[field] ? "" : payslip[field]}
+                    placeholder="0"
+                    onChange={(event) => onChange(index, field, Number(event.target.value) || 0)}
+                  />
+                </label>
+              ))}
 
               <details className="mt-1">
                 <summary className="cursor-pointer text-xs text-primary">
@@ -107,9 +125,12 @@ export function PayslipStep({ payslips, anomalousMonths, onChange }: PayslipStep
 
 export function createEmptyPayslips(): MonthlyPayslip[] {
   return Array.from({ length: 12 }, () => ({
+    employer: "",
     grossSalary: 0,
     payeDeducted: 0,
     uif: 0,
     retirementContribution: 0,
+    employerRetirementFringeBenefit: 0,
+    generalFringeBenefit: 0,
   }));
 }

@@ -1,5 +1,9 @@
 import { assessTax, type AssessmentResult } from "@/lib/tax-engine/assess";
-import { monthlyPayslipsToLineItems, type MonthlyPayslip } from "@/lib/tax-engine/payslips";
+import {
+  hasPayslipData,
+  monthlyPayslipsToLineItems,
+  type MonthlyPayslip,
+} from "@/lib/tax-engine/payslips";
 import type { RentalProperty } from "@/lib/tax-engine/rental";
 import { DEFAULT_TAX_YEAR } from "@/lib/tax-engine/tax-tables";
 import { createEmptyPayslips } from "./PayslipStep";
@@ -59,7 +63,7 @@ export function createInitialFormState(): FormState {
 /** True once the user has entered enough data for a result to be meaningful. */
 export function hasAssessmentData(form: FormState): boolean {
   return (
-    form.payslips.some((p) => Object.values(p).some((v) => v > 0)) ||
+    form.payslips.some(hasPayslipData) ||
     form.rentalProperties.length > 0 ||
     form.freelanceIncome > 0 ||
     form.interestIncome > 0

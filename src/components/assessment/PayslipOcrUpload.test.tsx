@@ -87,6 +87,23 @@ describe("PayslipOcrUpload", () => {
     expect(grossButtons[1]).toHaveClass("btn-primary"); // Total Cash Portion
   });
 
+  it("routes an employer retirement fringe benefit to its own field, not the employee's retirement contribution", async () => {
+    const user = userEvent.setup();
+    const onAssign = vi.fn();
+    recognizeMock.mockResolvedValue({
+      data: { text: "Pension fund contributions Fringe Benefit 6449.00" },
+    });
+
+    render(<PayslipOcrUpload onAssign={onAssign} />);
+    await user.upload(screen.getByLabelText("Upload payslip image"), makeImageFile());
+
+    const suggestedButton = await screen.findByText("Employer retirement FB");
+    expect(suggestedButton).toHaveClass("btn-primary");
+
+    await user.click(suggestedButton);
+    expect(onAssign).toHaveBeenCalledWith("employerRetirementFringeBenefit", 6_449);
+  });
+
   it("shows a message when no amounts were detected", async () => {
     const user = userEvent.setup();
     recognizeMock.mockResolvedValue({ data: { text: "no numbers here" } });
