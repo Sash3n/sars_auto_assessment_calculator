@@ -43,4 +43,30 @@ describe("extractNumbersFromText", () => {
     const result = extractNumbersFromText("Total Deductions 7 883.39 Net Pay 20 116.61");
     expect(result.map((r) => r.value)).toEqual([7_883.39, 20_116.61]);
   });
+
+  it("falls back to the previous line's label when a bordered table splits the amount onto its own line", () => {
+    // Wide-gap table layouts (label far left, amount far right) can make
+    // OCR emit the label and its amount as separate lines.
+    const text = ["Basic Salary", "R18,801.38", "Telephone Allowance", "R6,710.00"].join("\n");
+    const result = extractNumbersFromText(text);
+
+    expect(result).toEqual([
+      { raw: "R18,801.38", value: 18_801.38, context: "Basic Salary R18,801.38" },
+      { raw: "R6,710.00", value: 6_710.0, context: "Telephone Allowance R6,710.00" },
+    ]);
+  });
+
+  it("does not prepend a previous label line when the amount's own line already has one", () => {
+    const text = ["Basic Salary", "PAYE Tax 3,567.16"].join("\n");
+    const result = extractNumbersFromText(text);
+
+    expect(result[0].context).toBe("PAYE Tax 3,567.16");
+  });
+
+  it("skips bare table-header lines (Quantity, Rate, Balance, Amount) as fallback labels", () => {
+    const text = ["Basic Salary", "Quantity Rate", "R18,801.38"].join("\n");
+    const result = extractNumbersFromText(text);
+
+    expect(result[0].context).toBe("Basic Salary R18,801.38");
+  });
 });

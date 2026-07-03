@@ -2,6 +2,7 @@
 
 import { useState, type ChangeEvent } from "react";
 import { extractNumbersFromText, type ExtractedNumber } from "@/lib/ocr/extractNumbers";
+import { suggestField } from "@/lib/ocr/suggestField";
 import type { MonthlyPayslip } from "@/lib/tax-engine/payslips";
 import { formatCurrency } from "@/lib/format";
 
@@ -78,29 +79,42 @@ export function PayslipOcrUpload({ onAssign }: PayslipOcrUploadProps) {
       )}
 
       {numbers.length > 0 && (
-        <ul className="flex flex-col gap-1">
-          {numbers.map((n, index) => (
-            <li
-              key={index}
-              className="flex flex-wrap items-center gap-2 rounded-field border border-base-300 px-2 py-1 text-xs"
-            >
-              <span className="money font-medium">{formatCurrency(n.value)}</span>
-              <span className="truncate text-base-content/50">{n.context}</span>
-              <span className="ml-auto flex gap-1">
-                {FIELD_OPTIONS.map(({ field, label }) => (
-                  <button
-                    key={field}
-                    type="button"
-                    className="btn btn-ghost btn-xs"
-                    onClick={() => onAssign(field, n.value)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <>
+          <p className="text-[11px] text-base-content/50">
+            Tip: for Gross salary, use a &ldquo;Total&rdquo; or &ldquo;Gross&rdquo; row rather
+            than a single earnings line, so allowances aren&rsquo;t missed &mdash; and for
+            Retirement, use your own (employee) contribution, not your employer&rsquo;s.
+          </p>
+          <ul className="flex flex-col gap-1">
+            {numbers.map((n, index) => {
+              const suggested = suggestField(n.context);
+
+              return (
+                <li
+                  key={index}
+                  className="flex flex-wrap items-center gap-2 rounded-field border border-base-300 px-2 py-1 text-xs"
+                >
+                  <span className="money font-medium">{formatCurrency(n.value)}</span>
+                  <span className="truncate text-base-content/50">{n.context}</span>
+                  <span className="ml-auto flex gap-1">
+                    {FIELD_OPTIONS.map(({ field, label }) => (
+                      <button
+                        key={field}
+                        type="button"
+                        className={`btn btn-xs ${
+                          field === suggested ? "btn-primary" : "btn-ghost"
+                        }`}
+                        onClick={() => onAssign(field, n.value)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
     </div>
   );
