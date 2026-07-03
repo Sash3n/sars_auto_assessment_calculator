@@ -58,6 +58,10 @@ export type AssessmentResult = {
     taxableInterest: number;
     taxableTravelReimbursement: number;
     taxableCapitalGain: number;
+    /** Total income before the interest exemption is applied */
+    grossIncome: number;
+    /** Interest exemption applied (s10(1)(i)) */
+    exemptions: number;
     grossTotal: number;
   };
   deductions: {
@@ -101,11 +105,13 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
   const payslipSummary = summarizePayslips(input.payslips);
   const rental = calculateNetRentalIncome(input.rentalProperties ?? []);
   const freelanceIncome = input.freelanceIncome ?? 0;
+  const grossInterestIncome = input.interestIncome ?? 0;
   const taxableInterest = calculateTaxableInterest(
-    input.interestIncome ?? 0,
+    grossInterestIncome,
     input.age,
     table.interestExemption,
   );
+  const exemptions = grossInterestIncome - taxableInterest;
   const taxableTravelReimbursement = calculateTaxableTravelReimbursement(
     input.businessKmTravelled ?? 0,
     input.travelReimbursementRatePerKm ?? 0,
@@ -118,13 +124,14 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
     table: table.capitalGains,
   });
 
-  const grossTotal =
+  const grossIncome =
     payslipSummary.totalGrossSalary +
     rental.netIncome +
     freelanceIncome +
-    taxableInterest +
+    grossInterestIncome +
     taxableTravelReimbursement +
     taxableCapitalGain;
+  const grossTotal = grossIncome - exemptions;
 
   const totalRetirementContributions =
     payslipSummary.totalRetirementContribution +
@@ -194,6 +201,8 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
       taxableInterest,
       taxableTravelReimbursement,
       taxableCapitalGain,
+      grossIncome,
+      exemptions,
       grossTotal,
     },
     deductions: {

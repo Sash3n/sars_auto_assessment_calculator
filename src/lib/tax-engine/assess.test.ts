@@ -38,6 +38,19 @@ describe("assessTax (2025/26 golden values)", () => {
     expect(result.balance).toBeLessThan(0); // refund due
   });
 
+  it("splits interest exemption out as a distinct line item", () => {
+    const result = assessTax({
+      age: 35,
+      payslips: flatSalaryPayslips(400_000),
+      interestIncome: 50_000, // under-65 exemption is R23 800
+    });
+
+    expect(result.income.grossIncome).toBeCloseTo(450_000, 2);
+    expect(result.income.exemptions).toBeCloseTo(23_800, 2);
+    expect(result.income.taxableInterest).toBeCloseTo(26_200, 2);
+    expect(result.income.grossTotal).toBeCloseTo(426_200, 2);
+  });
+
   it("nets rental income/loss into taxable income", () => {
     const result = assessTax({
       age: 35,
