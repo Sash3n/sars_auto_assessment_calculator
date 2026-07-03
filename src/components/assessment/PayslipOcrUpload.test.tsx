@@ -56,6 +56,37 @@ describe("PayslipOcrUpload", () => {
     expect(onAssign).toHaveBeenCalledWith("payeDeducted", 3_506.27);
   });
 
+  it("highlights the suggested field button for a recognisable label", async () => {
+    const user = userEvent.setup();
+    recognizeMock.mockResolvedValue({
+      data: { text: "PAYE Tax 3,567.16" },
+    });
+
+    render(<PayslipOcrUpload onAssign={() => {}} />);
+    await user.upload(screen.getByLabelText("Upload payslip image"), makeImageFile());
+
+    const payeButton = await screen.findByText("PAYE");
+    expect(payeButton).toHaveClass("btn-primary");
+    expect(screen.getByText("Gross")).not.toHaveClass("btn-primary");
+  });
+
+  it("does not highlight any field for an itemised earnings line, only a total row", async () => {
+    const user = userEvent.setup();
+    recognizeMock.mockResolvedValue({
+      data: {
+        text: ["Basic Salary 18,801.38", "Total Cash Portion 25,511.38"].join("\n"),
+      },
+    });
+
+    render(<PayslipOcrUpload onAssign={() => {}} />);
+    await user.upload(screen.getByLabelText("Upload payslip image"), makeImageFile());
+
+    await waitFor(() => screen.getAllByText("Gross"));
+    const grossButtons = screen.getAllByText("Gross");
+    expect(grossButtons[0]).not.toHaveClass("btn-primary"); // Basic Salary
+    expect(grossButtons[1]).toHaveClass("btn-primary"); // Total Cash Portion
+  });
+
   it("shows a message when no amounts were detected", async () => {
     const user = userEvent.setup();
     recognizeMock.mockResolvedValue({ data: { text: "no numbers here" } });
