@@ -3,14 +3,16 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ResultsStep } from "./ResultsStep";
 import { assessTax } from "@/lib/tax-engine/assess";
+import { monthlyPayslipsToLineItems } from "@/lib/tax-engine/payslips";
 
 function flatPayslips(annualGross: number, annualPaye = 0) {
-  return Array.from({ length: 12 }, () => ({
+  const monthly = Array.from({ length: 12 }, () => ({
     grossSalary: annualGross / 12,
     payeDeducted: annualPaye / 12,
     uif: 0,
     retirementContribution: 0,
   }));
+  return monthlyPayslipsToLineItems(monthly);
 }
 
 function renderResults(

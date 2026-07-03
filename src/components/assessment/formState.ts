@@ -1,5 +1,5 @@
 import { assessTax, type AssessmentResult } from "@/lib/tax-engine/assess";
-import type { MonthlyPayslip } from "@/lib/tax-engine/payslips";
+import { monthlyPayslipsToLineItems, type MonthlyPayslip } from "@/lib/tax-engine/payslips";
 import type { RentalProperty } from "@/lib/tax-engine/rental";
 import { DEFAULT_TAX_YEAR } from "@/lib/tax-engine/tax-tables";
 import { createEmptyPayslips } from "./PayslipStep";
@@ -70,7 +70,10 @@ export function computeAssessmentResult(form: FormState): AssessmentResult {
   return assessTax({
     taxYear: form.taxYear,
     age: form.age,
-    payslips: form.payslips,
+    // Bridge to the tax engine's line-item model; the wizard's UI still only
+    // needs the simple 4-field-per-month shape (removed once PayslipStep
+    // moves natively to PayslipLineItem[]).
+    payslips: monthlyPayslipsToLineItems(form.payslips),
     rentalProperties: form.rentalProperties,
     freelanceIncome: form.freelanceIncome,
     interestIncome: form.interestIncome,

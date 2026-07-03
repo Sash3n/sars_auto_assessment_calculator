@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { assessTax } from "./assess";
-import type { MonthlyPayslip } from "./payslips";
+import { monthlyPayslipsToLineItems, type PayslipLineItem } from "./payslips";
 
-function flatSalaryPayslips(annualGross: number, annualPaye = 0): MonthlyPayslip[] {
-  return Array.from({ length: 12 }, () => ({
+function flatSalaryPayslips(annualGross: number, annualPaye = 0): PayslipLineItem[] {
+  const monthly = Array.from({ length: 12 }, () => ({
     grossSalary: annualGross / 12,
     payeDeducted: annualPaye / 12,
     uif: 0,
     retirementContribution: 0,
   }));
+  return monthlyPayslipsToLineItems(monthly);
 }
 
 describe("assessTax (2025/26 golden values)", () => {
@@ -174,6 +175,35 @@ describe("assessTax (2025/26 golden values)", () => {
     // gain 400 000 - 40 000 annual exclusion = 360 000; * 40% = 144 000
     expect(result.income.taxableCapitalGain).toBeCloseTo(144_000, 2);
     expect(result.taxableIncome).toBeCloseTo(544_000, 2);
+  });
+
+  it("adds employer fringe benefits to income, and counts the retirement fringe benefit toward the s11F contribution base", () => {
+    // Regression fixture reproducing a real SARS ITA34: employer pension
+    // fund contribution (3817-style) is both taxable income AND a deemed
+    // employee retirement contribution; general fringe benefits (3801-style)
+    // are taxable but not a retirement contribution.
+    const payslips: PayslipLineItem[] = [
+      { id: "1", month: 0, employer: "Acme Ltd", category: "basic_salary", amount: 300_000 },
+      {
+        id: "2",
+        month: 0,
+        employer: "Acme Ltd",
+        category: "employer_retirement_fringe_benefit",
+        amount: 6_449,
+      },
+      {
+        id: "3",
+        month: 0,
+        employer: "Acme Ltd",
+        category: "general_fringe_benefit",
+        amount: 367,
+      },
+    ];
+
+    const result = assessTax({ age: 35, payslips });
+
+    expect(result.income.grossIncome).toBeCloseTo(300_000 + 6_449 + 367, 2);
+    expect(result.deductions.retirementDeductible).toBeCloseTo(6_449, 2);
   });
 
   it("excludes a primary residence disposal gain under the R2m exclusion", () => {
