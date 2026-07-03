@@ -3,7 +3,33 @@ export type MonthlyPayslip = {
   payeDeducted: number;
   uif: number;
   retirementContribution: number;
+  employer?: string;
+  /** Employer's pension/provident fund contribution (SARS 3817-style): a
+   * taxable fringe benefit that's also a deemed employee contribution. */
+  employerRetirementFringeBenefit?: number;
+  /** General taxable fringe benefits (SARS 3801-style, e.g. company car, medical aid) */
+  generalFringeBenefit?: number;
 };
+
+/** MonthlyPayslip's numeric fields, i.e. everything except the employer name. */
+export type NumericPayslipField = Exclude<keyof MonthlyPayslip, "employer">;
+
+export const NUMERIC_PAYSLIP_FIELDS: NumericPayslipField[] = [
+  "grossSalary",
+  "payeDeducted",
+  "uif",
+  "retirementContribution",
+  "employerRetirementFringeBenefit",
+  "generalFringeBenefit",
+];
+
+/** True if any field of a monthly payslip (including the employer name) has been filled in. */
+export function hasPayslipData(payslip: MonthlyPayslip): boolean {
+  return (
+    NUMERIC_PAYSLIP_FIELDS.some((field) => (payslip[field] ?? 0) > 0) ||
+    (payslip.employer ?? "").trim().length > 0
+  );
+}
 
 export type PayslipSummary = {
   totalGrossSalary: number;
@@ -217,11 +243,13 @@ export function summarizeLineItems(
  */
 export function monthlyPayslipsToLineItems(
   payslips: MonthlyPayslip[],
-  employer = "Employer",
+  defaultEmployer = "Employer",
 ): PayslipLineItem[] {
   const items: PayslipLineItem[] = [];
 
   payslips.forEach((payslip, month) => {
+    const employer = payslip.employer?.trim() || defaultEmployer;
+
     if (payslip.grossSalary > 0) {
       items.push({
         id: `${month}-basic_salary`,
@@ -250,6 +278,24 @@ export function monthlyPayslipsToLineItems(
         employer,
         category: "employee_retirement_contribution",
         amount: payslip.retirementContribution,
+      });
+    }
+    if ((payslip.employerRetirementFringeBenefit ?? 0) > 0) {
+      items.push({
+        id: `${month}-employer_retirement_fringe_benefit`,
+        month,
+        employer,
+        category: "employer_retirement_fringe_benefit",
+        amount: payslip.employerRetirementFringeBenefit!,
+      });
+    }
+    if ((payslip.generalFringeBenefit ?? 0) > 0) {
+      items.push({
+        id: `${month}-general_fringe_benefit`,
+        month,
+        employer,
+        category: "general_fringe_benefit",
+        amount: payslip.generalFringeBenefit!,
       });
     }
   });

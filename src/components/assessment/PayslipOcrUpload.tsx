@@ -3,20 +3,22 @@
 import { useState, type ChangeEvent } from "react";
 import { extractNumbersFromText, type ExtractedNumber } from "@/lib/ocr/extractNumbers";
 import { suggestField } from "@/lib/ocr/suggestField";
-import type { MonthlyPayslip } from "@/lib/tax-engine/payslips";
+import type { NumericPayslipField } from "@/lib/tax-engine/payslips";
 import { formatCurrency } from "@/lib/format";
 
-const FIELD_OPTIONS: { field: keyof MonthlyPayslip; label: string }[] = [
+const FIELD_OPTIONS: { field: NumericPayslipField; label: string }[] = [
   { field: "grossSalary", label: "Gross" },
   { field: "payeDeducted", label: "PAYE" },
   { field: "uif", label: "UIF" },
   { field: "retirementContribution", label: "Retirement" },
+  { field: "employerRetirementFringeBenefit", label: "Employer retirement FB" },
+  { field: "generalFringeBenefit", label: "General FB" },
 ];
 
 type Status = "idle" | "scanning" | "done" | "error";
 
 type PayslipOcrUploadProps = {
-  onAssign: (field: keyof MonthlyPayslip, value: number) => void;
+  onAssign: (field: NumericPayslipField, value: number) => void;
 };
 
 export function PayslipOcrUpload({ onAssign }: PayslipOcrUploadProps) {

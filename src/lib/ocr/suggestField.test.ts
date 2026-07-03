@@ -17,8 +17,18 @@ describe("suggestField", () => {
     expect(suggestField("Retirement Annuity 4 200.00")).toBe("retirementContribution");
   });
 
-  it("does not suggest retirementContribution for an employer's non-cash contribution", () => {
-    expect(suggestField("Retirement Funding - Employer 564.04")).toBeNull();
+  it("suggests employerRetirementFringeBenefit for an employer's non-cash retirement contribution", () => {
+    expect(suggestField("Retirement Funding - Employer 564.04")).toBe(
+      "employerRetirementFringeBenefit",
+    );
+    expect(suggestField("Pension fund contributions Fringe Benefit 6449.00")).toBe(
+      "employerRetirementFringeBenefit",
+    );
+  });
+
+  it("suggests generalFringeBenefit for general fringe benefit line items", () => {
+    expect(suggestField("General Fringe Benefits 367.00")).toBe("generalFringeBenefit");
+    expect(suggestField("Company car fringe benefit 2000.00")).toBe("generalFringeBenefit");
   });
 
   it("suggests grossSalary for a total-cash-style summary row", () => {

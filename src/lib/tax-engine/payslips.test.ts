@@ -177,4 +177,35 @@ describe("monthlyPayslipsToLineItems", () => {
     const payslips = [{ grossSalary: 0, payeDeducted: 0, uif: 0, retirementContribution: 0 }];
     expect(monthlyPayslipsToLineItems(payslips)).toEqual([]);
   });
+
+  it("converts employer retirement fringe benefit and general fringe benefit fields", () => {
+    const payslips = [
+      {
+        grossSalary: 300_000,
+        payeDeducted: 0,
+        uif: 0,
+        retirementContribution: 0,
+        employerRetirementFringeBenefit: 6_449,
+        generalFringeBenefit: 367,
+      },
+    ];
+
+    const lineItems = monthlyPayslipsToLineItems(payslips);
+    const summary = summarizeLineItems(lineItems, 1);
+
+    expect(summary.totalGrossSalary).toBeCloseTo(300_000 + 6_449 + 367, 2);
+    expect(summary.totalRetirementContribution).toBeCloseTo(6_449, 2);
+  });
+
+  it("tags line items with each payslip's own employer, falling back to a default", () => {
+    const payslips = [
+      { employer: "Acme Ltd", grossSalary: 20_000, payeDeducted: 0, uif: 0, retirementContribution: 0 },
+      { grossSalary: 5_000, payeDeducted: 0, uif: 0, retirementContribution: 0 },
+    ];
+
+    const lineItems = monthlyPayslipsToLineItems(payslips);
+
+    expect(lineItems.find((i) => i.month === 0)?.employer).toBe("Acme Ltd");
+    expect(lineItems.find((i) => i.month === 1)?.employer).toBe("Employer");
+  });
 });

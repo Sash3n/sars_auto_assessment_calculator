@@ -15,7 +15,12 @@ vi.mock("tesseract.js", () => ({
 describe("PayslipStep", () => {
   it("renders a card for all 12 months of the SA tax year", () => {
     render(
-      <PayslipStep payslips={createEmptyPayslips()} anomalousMonths={[]} onChange={() => {}} />,
+      <PayslipStep
+        payslips={createEmptyPayslips()}
+        anomalousMonths={[]}
+        onChange={() => {}}
+        onEmployerChange={() => {}}
+      />,
     );
     expect(screen.getByText("March")).toBeInTheDocument();
     expect(screen.getByText("February")).toBeInTheDocument();
@@ -23,7 +28,12 @@ describe("PayslipStep", () => {
 
   it("shows a Pending badge for months with no data entered", () => {
     render(
-      <PayslipStep payslips={createEmptyPayslips()} anomalousMonths={[]} onChange={() => {}} />,
+      <PayslipStep
+        payslips={createEmptyPayslips()}
+        anomalousMonths={[]}
+        onChange={() => {}}
+        onEmployerChange={() => {}}
+      />,
     );
     expect(screen.getAllByText("Pending")).toHaveLength(12);
   });
@@ -31,7 +41,14 @@ describe("PayslipStep", () => {
   it("shows an Entered badge once gross salary is filled in", () => {
     const payslips = createEmptyPayslips();
     payslips[0] = { ...payslips[0], grossSalary: 45000 };
-    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
+    render(
+      <PayslipStep
+        payslips={payslips}
+        anomalousMonths={[]}
+        onChange={() => {}}
+        onEmployerChange={() => {}}
+      />,
+    );
     expect(screen.getAllByText("Entered")).toHaveLength(1);
     expect(screen.getAllByText("Pending")).toHaveLength(11);
   });
@@ -39,15 +56,43 @@ describe("PayslipStep", () => {
   it("shows an Entered badge when only PAYE/UIF/retirement data is filled in, without gross salary", () => {
     const payslips = createEmptyPayslips();
     payslips[0] = { ...payslips[0], payeDeducted: 5000, uif: 200, retirementContribution: 1000 };
-    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
+    render(
+      <PayslipStep
+        payslips={payslips}
+        anomalousMonths={[]}
+        onChange={() => {}}
+        onEmployerChange={() => {}}
+      />,
+    );
     expect(screen.getAllByText("Entered")).toHaveLength(1);
     expect(screen.getAllByText("Pending")).toHaveLength(11);
+  });
+
+  it("shows an Entered badge when only an employer name is filled in", () => {
+    const payslips = createEmptyPayslips();
+    payslips[0] = { ...payslips[0], employer: "Acme Ltd" };
+    render(
+      <PayslipStep
+        payslips={payslips}
+        anomalousMonths={[]}
+        onChange={() => {}}
+        onEmployerChange={() => {}}
+      />,
+    );
+    expect(screen.getAllByText("Entered")).toHaveLength(1);
   });
 
   it("shows an Unusual badge only for flagged months", () => {
     const payslips = createEmptyPayslips();
     payslips[11] = { ...payslips[11], grossSalary: 90000 };
-    render(<PayslipStep payslips={payslips} anomalousMonths={[11]} onChange={() => {}} />);
+    render(
+      <PayslipStep
+        payslips={payslips}
+        anomalousMonths={[11]}
+        onChange={() => {}}
+        onEmployerChange={() => {}}
+      />,
+    );
     expect(screen.getAllByText("Unusual")).toHaveLength(1);
   });
 
@@ -55,7 +100,12 @@ describe("PayslipStep", () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(
-      <PayslipStep payslips={createEmptyPayslips()} anomalousMonths={[]} onChange={onChange} />,
+      <PayslipStep
+        payslips={createEmptyPayslips()}
+        anomalousMonths={[]}
+        onChange={onChange}
+        onEmployerChange={() => {}}
+      />,
     );
 
     const marchGross = screen.getByLabelText("March grossSalary");
@@ -64,13 +114,53 @@ describe("PayslipStep", () => {
     expect(onChange).toHaveBeenCalledWith(0, "grossSalary", 5);
   });
 
+  it("calls onChange when a fringe benefit field is edited", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <PayslipStep
+        payslips={createEmptyPayslips()}
+        anomalousMonths={[]}
+        onChange={onChange}
+        onEmployerChange={() => {}}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("March employerRetirementFringeBenefit"), "6");
+    expect(onChange).toHaveBeenCalledWith(0, "employerRetirementFringeBenefit", 6);
+
+    await user.type(screen.getByLabelText("March generalFringeBenefit"), "3");
+    expect(onChange).toHaveBeenCalledWith(0, "generalFringeBenefit", 3);
+  });
+
+  it("calls onEmployerChange when the employer field is edited", async () => {
+    const user = userEvent.setup();
+    const onEmployerChange = vi.fn();
+    render(
+      <PayslipStep
+        payslips={createEmptyPayslips()}
+        anomalousMonths={[]}
+        onChange={() => {}}
+        onEmployerChange={onEmployerChange}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("March employer"), "A");
+    expect(onEmployerChange).toHaveBeenCalledWith(0, "A");
+  });
+
   it("wires a scanned amount assigned in March's OCR upload to March's onChange", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     recognizeMock.mockResolvedValue({ data: { text: "Pay as you Earn 3 506.27" } });
 
     render(
-      <PayslipStep payslips={createEmptyPayslips()} anomalousMonths={[]} onChange={onChange} />,
+      <PayslipStep
+        payslips={createEmptyPayslips()}
+        anomalousMonths={[]}
+        onChange={onChange}
+        onEmployerChange={() => {}}
+      />,
     );
 
     const marchUpload = screen.getAllByLabelText("Upload payslip image")[0];

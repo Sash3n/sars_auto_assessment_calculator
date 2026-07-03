@@ -69,4 +69,17 @@ describe("extractNumbersFromText", () => {
 
     expect(result[0].context).toBe("Basic Salary R18,801.38");
   });
+
+  it("extracts a 4+ digit amount with no thousands separator at all", () => {
+    // Real SARS ITA34 printouts sometimes omit the separator, e.g.
+    // "Pension fund contributions Fringe Benefit ... 6449.00"
+    const result = extractNumbersFromText("Pension fund contributions Fringe Benefit 6449.00");
+    expect(result).toEqual([
+      {
+        raw: "6449.00",
+        value: 6_449,
+        context: "Pension fund contributions Fringe Benefit 6449.00",
+      },
+    ]);
+  });
 });
