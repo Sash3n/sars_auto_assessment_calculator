@@ -7,7 +7,7 @@ import { calculateAdditionalMedicalCredit } from "./medical";
 import { calculateTaxableTravelReimbursement } from "./travel";
 import { calculateHomeOfficeDeduction } from "./homeOffice";
 import { calculateTaxableCapitalGain } from "./capitalGains";
-import { summarizePayslips, type MonthlyPayslip } from "./payslips";
+import { summarizeLineItems, type PayslipLineItem } from "./payslips";
 import { TAX_YEAR_TABLES, DEFAULT_TAX_YEAR, type TaxYearTable } from "./tax-tables";
 
 const DONATIONS_DEDUCTION_CAP = 0.1; // s18A: capped at 10% of taxable income
@@ -15,7 +15,7 @@ const DONATIONS_DEDUCTION_CAP = 0.1; // s18A: capped at 10% of taxable income
 export type AssessmentInput = {
   taxYear?: string;
   age: number;
-  payslips: MonthlyPayslip[];
+  payslips: PayslipLineItem[];
   rentalProperties?: RentalProperty[];
   freelanceIncome?: number;
   interestIncome?: number;
@@ -82,7 +82,7 @@ export type AssessmentResult = {
   balance: number;
   isLikelyProvisionalTaxpayer: boolean;
   rental: ReturnType<typeof calculateNetRentalIncome>;
-  payslipSummary: ReturnType<typeof summarizePayslips>;
+  payslipSummary: ReturnType<typeof summarizeLineItems>;
   sarsComparison: { sarsAssessedTaxPayable: number; difference: number } | null;
 };
 
@@ -102,7 +102,7 @@ function resolveTaxYearTable(taxYear: string | undefined): TaxYearTable {
 export function assessTax(input: AssessmentInput): AssessmentResult {
   const table = resolveTaxYearTable(input.taxYear);
 
-  const payslipSummary = summarizePayslips(input.payslips);
+  const payslipSummary = summarizeLineItems(input.payslips);
   const rental = calculateNetRentalIncome(input.rentalProperties ?? []);
   const freelanceIncome = input.freelanceIncome ?? 0;
   const grossInterestIncome = input.interestIncome ?? 0;
