@@ -4,6 +4,7 @@ import type { AssessmentResult } from "@/lib/tax-engine/assess";
 import { findBracketIndex } from "@/lib/tax-engine/brackets";
 import { TAX_YEAR_TABLES } from "@/lib/tax-engine/tax-tables";
 import { formatCurrency } from "@/lib/format";
+import { StatCard } from "./StatCard";
 
 type ResultsStepProps = {
   result: AssessmentResult;
@@ -38,15 +39,6 @@ function TaxBracketBar({ taxableIncome, taxYear }: { taxableIncome: number; taxY
           </span>
         ))}
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-box bg-base-100 p-4 shadow-sm">
-      <p className="text-xs uppercase tracking-wide text-base-content/50">{label}</p>
-      <p className="money mt-1 text-lg font-semibold">{value}</p>
     </div>
   );
 }
@@ -156,9 +148,9 @@ export function ResultsStep({
                 <td className="money text-right">{formatCurrency(result.income.freelance)}</td>
               </tr>
               <tr>
-                <td>Taxable interest</td>
+                <td>Interest income</td>
                 <td className="money text-right">
-                  {formatCurrency(result.income.taxableInterest)}
+                  {formatCurrency(result.income.taxableInterest + result.income.exemptions)}
                 </td>
               </tr>
               <tr>
@@ -175,6 +167,16 @@ export function ResultsStep({
               </tr>
               <tr className="font-semibold">
                 <td>Gross income</td>
+                <td className="money text-right">{formatCurrency(result.income.grossIncome)}</td>
+              </tr>
+              <tr>
+                <td>Less: exemptions</td>
+                <td className="money text-right">
+                  -{formatCurrency(result.income.exemptions)}
+                </td>
+              </tr>
+              <tr className="font-semibold">
+                <td>Income after exemptions</td>
                 <td className="money text-right">{formatCurrency(result.income.grossTotal)}</td>
               </tr>
               <tr>

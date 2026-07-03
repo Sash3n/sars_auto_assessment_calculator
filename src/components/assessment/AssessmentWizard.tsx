@@ -1,16 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { assessTax } from "@/lib/tax-engine/assess";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { summarizePayslips, type MonthlyPayslip } from "@/lib/tax-engine/payslips";
-import type { RentalProperty } from "@/lib/tax-engine/rental";
-import { DEFAULT_TAX_YEAR } from "@/lib/tax-engine/tax-tables";
+import { loadStoredFormState, saveFormState } from "@/lib/assessmentStorage";
 import { AssessmentShell, type AssessmentStep } from "./AssessmentShell";
-import { PayslipStep, createEmptyPayslips } from "./PayslipStep";
+import { Stepper } from "./Stepper";
+import { PayslipStep } from "./PayslipStep";
 import { OtherIncomeStep } from "./OtherIncomeStep";
 import { ProfileStep } from "./ProfileStep";
 import { DeductionsStep } from "./DeductionsStep";
 import { ResultsStep } from "./ResultsStep";
+import { computeAssessmentResult, createInitialFormState } from "./formState";
 
 const STEPS: AssessmentStep[] = [
   { key: "profile", label: "Profile" },
@@ -20,95 +21,38 @@ const STEPS: AssessmentStep[] = [
   { key: "results", label: "Results" },
 ];
 
-type FormState = {
-  taxYear: string;
-  age: number;
-  medicalSchemeMembers: number;
-  hasDisability: boolean;
-  annualMedicalContributions: number;
-  outOfPocketMedicalExpenses: number;
-  additionalRetirementContributions: number;
-  donations: number;
-  businessKmTravelled: number;
-  travelReimbursementRatePerKm: number;
-  homeOfficeAreaSqm: number;
-  totalHomeAreaSqm: number;
-  monthsHomeOfficeUsed: number;
-  totalHomeExpenses: number;
-  propertyDisposalProceeds: number;
-  propertyDisposalBaseCost: number;
-  isPrimaryResidenceDisposal: boolean;
-  sarsAssessedTaxPayable: number | undefined;
-  payslips: MonthlyPayslip[];
-  rentalProperties: RentalProperty[];
-  freelanceIncome: number;
-  interestIncome: number;
-};
-
-function createInitialState(): FormState {
-  return {
-    taxYear: DEFAULT_TAX_YEAR,
-    age: 0,
-    medicalSchemeMembers: 0,
-    hasDisability: false,
-    annualMedicalContributions: 0,
-    outOfPocketMedicalExpenses: 0,
-    additionalRetirementContributions: 0,
-    donations: 0,
-    businessKmTravelled: 0,
-    travelReimbursementRatePerKm: 0,
-    homeOfficeAreaSqm: 0,
-    totalHomeAreaSqm: 0,
-    monthsHomeOfficeUsed: 0,
-    totalHomeExpenses: 0,
-    propertyDisposalProceeds: 0,
-    propertyDisposalBaseCost: 0,
-    isPrimaryResidenceDisposal: false,
-    sarsAssessedTaxPayable: undefined,
-    payslips: createEmptyPayslips(),
-    rentalProperties: [],
-    freelanceIncome: 0,
-    interestIncome: 0,
-  };
-}
-
 export function AssessmentWizard() {
-  const [stepKey, setStepKey] = useState<string>(STEPS[0].key);
-  const [form, setForm] = useState<FormState>(createInitialState);
+  const searchParams = useSearchParams();
+  const requestedStep = searchParams?.get("step") ?? null;
+  const initialStepKey = STEPS.some((step) => step.key === requestedStep)
+    ? requestedStep!
+    : STEPS[0].key;
+
+  const [stepKey, setStepKey] = useState<string>(initialStepKey);
+  const [form, setForm] = useState(createInitialFormState);
+  const hasLoadedFromStorage = useRef(false);
+
+  useEffect(() => {
+    // Deliberate one-time hydration from localStorage: SSR has no access to
+    // it, so the form must start with defaults and swap in stored data once
+    // mounted on the client rather than during the initial render.
+    const stored = loadStoredFormState();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored) setForm(stored);
+    hasLoadedFromStorage.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedFromStorage.current) return;
+    saveFormState(form);
+  }, [form]);
 
   const anomalousMonths = useMemo(
     () => summarizePayslips(form.payslips).anomalousMonths,
     [form.payslips],
   );
 
-  const result = useMemo(
-    () =>
-      assessTax({
-        taxYear: form.taxYear,
-        age: form.age,
-        payslips: form.payslips,
-        rentalProperties: form.rentalProperties,
-        freelanceIncome: form.freelanceIncome,
-        interestIncome: form.interestIncome,
-        medicalSchemeMembers: form.medicalSchemeMembers,
-        hasDisability: form.hasDisability,
-        annualMedicalContributions: form.annualMedicalContributions,
-        outOfPocketMedicalExpenses: form.outOfPocketMedicalExpenses,
-        additionalRetirementContributions: form.additionalRetirementContributions,
-        donations: form.donations,
-        businessKmTravelled: form.businessKmTravelled,
-        travelReimbursementRatePerKm: form.travelReimbursementRatePerKm,
-        homeOfficeAreaSqm: form.homeOfficeAreaSqm,
-        totalHomeAreaSqm: form.totalHomeAreaSqm,
-        monthsHomeOfficeUsed: form.monthsHomeOfficeUsed,
-        totalHomeExpenses: form.totalHomeExpenses,
-        propertyDisposalProceeds: form.propertyDisposalProceeds,
-        propertyDisposalBaseCost: form.propertyDisposalBaseCost,
-        isPrimaryResidenceDisposal: form.isPrimaryResidenceDisposal,
-        sarsAssessedTaxPayable: form.sarsAssessedTaxPayable,
-      }),
-    [form],
-  );
+  const result = useMemo(() => computeAssessmentResult(form), [form]);
 
   function updatePayslipField(index: number, field: keyof MonthlyPayslip, value: number) {
     setForm((prev) => ({
@@ -122,6 +66,8 @@ export function AssessmentWizard() {
   return (
     <AssessmentShell steps={STEPS} currentStepKey={stepKey} onStepChange={setStepKey}>
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10">
+        <Stepper steps={STEPS} currentStepKey={stepKey} onStepChange={setStepKey} />
+
         {stepKey === "profile" && (
           <ProfileStep
             taxYear={form.taxYear}
