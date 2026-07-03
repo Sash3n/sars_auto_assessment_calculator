@@ -54,7 +54,8 @@ describe("AssessmentWizard", () => {
     await user.type(screen.getByLabelText("Age"), "35");
     await user.click(screen.getByRole("button", { name: "Next" }));
 
-    await user.type(screen.getByLabelText("March grossSalary"), "50000");
+    await user.click(screen.getAllByText("+ Add employer")[0]);
+    await user.type(screen.getByLabelText("March basic_salary"), "50000");
 
     const resultsButtons = screen.getAllByRole("button", { name: "Results" });
     await user.click(resultsButtons[0]);

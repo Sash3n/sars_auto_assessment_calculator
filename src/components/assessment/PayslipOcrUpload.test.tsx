@@ -53,7 +53,7 @@ describe("PayslipOcrUpload", () => {
     await waitFor(() => screen.getByText("PAYE"));
     await user.click(screen.getByText("PAYE"));
 
-    expect(onAssign).toHaveBeenCalledWith("payeDeducted", 3_506.27);
+    expect(onAssign).toHaveBeenCalledWith("paye", 3_506.27);
   });
 
   it("highlights the suggested field button for a recognisable label", async () => {
@@ -101,7 +101,7 @@ describe("PayslipOcrUpload", () => {
     expect(suggestedButton).toHaveClass("btn-primary");
 
     await user.click(suggestedButton);
-    expect(onAssign).toHaveBeenCalledWith("employerRetirementFringeBenefit", 6_449);
+    expect(onAssign).toHaveBeenCalledWith("employer_retirement_fringe_benefit", 6_449);
   });
 
   it("shows a message when no amounts were detected", async () => {

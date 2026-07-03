@@ -21,9 +21,15 @@ describe("Dashboard", () => {
     const form = {
       ...createInitialFormState(),
       age: 35,
-      payslips: createInitialFormState().payslips.map((p, i) =>
-        i === 0 ? { ...p, grossSalary: 500_000, payeDeducted: 0 } : p,
-      ),
+      payslips: [
+        {
+          id: "0-basic_salary",
+          month: 0,
+          employer: "Acme Ltd",
+          category: "basic_salary" as const,
+          amount: 500_000,
+        },
+      ],
     };
     saveFormState(form);
 

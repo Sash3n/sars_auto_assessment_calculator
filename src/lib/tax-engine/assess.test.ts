@@ -1,15 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { assessTax } from "./assess";
-import { monthlyPayslipsToLineItems, type PayslipLineItem } from "./payslips";
+import type { PayslipLineItem } from "./payslips";
 
 function flatSalaryPayslips(annualGross: number, annualPaye = 0): PayslipLineItem[] {
-  const monthly = Array.from({ length: 12 }, () => ({
-    grossSalary: annualGross / 12,
-    payeDeducted: annualPaye / 12,
-    uif: 0,
-    retirementContribution: 0,
-  }));
-  return monthlyPayslipsToLineItems(monthly);
+  const items: PayslipLineItem[] = [];
+  for (let month = 0; month < 12; month++) {
+    items.push({
+      id: `${month}-basic_salary`,
+      month,
+      employer: "Employer",
+      category: "basic_salary",
+      amount: annualGross / 12,
+    });
+    if (annualPaye > 0) {
+      items.push({
+        id: `${month}-paye`,
+        month,
+        employer: "Employer",
+        category: "paye",
+        amount: annualPaye / 12,
+      });
+    }
+  }
+  return items;
 }
 
 describe("assessTax (2025/26 golden values)", () => {

@@ -1,12 +1,8 @@
 import { assessTax, type AssessmentResult } from "@/lib/tax-engine/assess";
-import {
-  hasPayslipData,
-  monthlyPayslipsToLineItems,
-  type MonthlyPayslip,
-} from "@/lib/tax-engine/payslips";
+import type { PayslipLineItem } from "@/lib/tax-engine/payslips";
 import type { RentalProperty } from "@/lib/tax-engine/rental";
 import { DEFAULT_TAX_YEAR } from "@/lib/tax-engine/tax-tables";
-import { createEmptyPayslips } from "./PayslipStep";
+import { hasAnyPayslipData } from "./payslipBlocks";
 
 export type FormState = {
   taxYear: string;
@@ -27,7 +23,7 @@ export type FormState = {
   propertyDisposalBaseCost: number;
   isPrimaryResidenceDisposal: boolean;
   sarsAssessedTaxPayable: number | undefined;
-  payslips: MonthlyPayslip[];
+  payslips: PayslipLineItem[];
   rentalProperties: RentalProperty[];
   freelanceIncome: number;
   interestIncome: number;
@@ -53,7 +49,7 @@ export function createInitialFormState(): FormState {
     propertyDisposalBaseCost: 0,
     isPrimaryResidenceDisposal: false,
     sarsAssessedTaxPayable: undefined,
-    payslips: createEmptyPayslips(),
+    payslips: [],
     rentalProperties: [],
     freelanceIncome: 0,
     interestIncome: 0,
@@ -63,7 +59,7 @@ export function createInitialFormState(): FormState {
 /** True once the user has entered enough data for a result to be meaningful. */
 export function hasAssessmentData(form: FormState): boolean {
   return (
-    form.payslips.some(hasPayslipData) ||
+    hasAnyPayslipData(form.payslips) ||
     form.rentalProperties.length > 0 ||
     form.freelanceIncome > 0 ||
     form.interestIncome > 0
@@ -74,10 +70,7 @@ export function computeAssessmentResult(form: FormState): AssessmentResult {
   return assessTax({
     taxYear: form.taxYear,
     age: form.age,
-    // Bridge to the tax engine's line-item model; the wizard's UI still only
-    // needs the simple 4-field-per-month shape (removed once PayslipStep
-    // moves natively to PayslipLineItem[]).
-    payslips: monthlyPayslipsToLineItems(form.payslips),
+    payslips: form.payslips,
     rentalProperties: form.rentalProperties,
     freelanceIncome: form.freelanceIncome,
     interestIncome: form.interestIncome,
