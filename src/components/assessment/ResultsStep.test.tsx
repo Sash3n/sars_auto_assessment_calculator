@@ -31,22 +31,27 @@ function flatPayslips(annualGross: number, annualPaye = 0): PayslipLineItem[] {
 function renderResults(
   overrides: Partial<Parameters<typeof assessTax>[0]> = {},
   sarsAssessedTaxPayable: number | undefined = undefined,
+  sarsAssessedLineItems: Parameters<typeof assessTax>[0]["sarsAssessedLineItems"] = [],
 ) {
   const result = assessTax({
     age: 35,
     payslips: flatPayslips(500_000),
     sarsAssessedTaxPayable,
+    sarsAssessedLineItems,
     ...overrides,
   });
   const onSarsAssessedTaxPayableChange = vi.fn();
+  const onSarsAssessedLineItemsChange = vi.fn();
   render(
     <ResultsStep
       result={result}
       sarsAssessedTaxPayable={sarsAssessedTaxPayable}
       onSarsAssessedTaxPayableChange={onSarsAssessedTaxPayableChange}
+      sarsAssessedLineItems={sarsAssessedLineItems ?? []}
+      onSarsAssessedLineItemsChange={onSarsAssessedLineItemsChange}
     />,
   );
-  return { result, onSarsAssessedTaxPayableChange };
+  return { result, onSarsAssessedTaxPayableChange, onSarsAssessedLineItemsChange };
 }
 
 describe("ResultsStep", () => {
@@ -107,5 +112,45 @@ describe("ResultsStep", () => {
   it("renders a print-only summary heading", () => {
     renderResults();
     expect(screen.getByText("SARS Auto-Assessment Calculator")).toBeInTheDocument();
+  });
+
+  it("does not render the by-code comparison table when no SARS-assessed line items are entered", () => {
+    renderResults();
+    expect(screen.queryByText("Compared by SARS code")).not.toBeInTheDocument();
+  });
+
+  it("renders the by-code comparison table when SARS-assessed line items are entered", () => {
+    renderResults(
+      { payslips: [{ id: "1", month: 0, employer: "Old Co", category: "basic_salary", sarsCode: "3601", amount: 47_365 }] },
+      undefined,
+      [{ sarsCode: "3601", amount: 45_000 }],
+    );
+    expect(screen.getByText("Compared by SARS code")).toBeInTheDocument();
+    expect(screen.getByText("3601")).toBeInTheDocument();
+  });
+
+  it("adds a new SARS-assessed line item row", async () => {
+    const user = userEvent.setup();
+    const { onSarsAssessedLineItemsChange } = renderResults();
+    await user.click(screen.getByRole("button", { name: "+ Add SARS code" }));
+    expect(onSarsAssessedLineItemsChange).toHaveBeenCalledWith([{ sarsCode: "", amount: 0 }]);
+  });
+
+  it("removes a SARS-assessed line item row", async () => {
+    const user = userEvent.setup();
+    const { onSarsAssessedLineItemsChange } = renderResults({}, undefined, [
+      { sarsCode: "3601", amount: 45_000 },
+    ]);
+    await user.click(screen.getByLabelText("Remove SARS code row 1"));
+    expect(onSarsAssessedLineItemsChange).toHaveBeenCalledWith([]);
+  });
+
+  it("edits a SARS-assessed line item's code and amount", async () => {
+    const user = userEvent.setup();
+    const { onSarsAssessedLineItemsChange } = renderResults({}, undefined, [
+      { sarsCode: "", amount: 0 },
+    ]);
+    await user.type(screen.getByLabelText("SARS code row 1"), "3");
+    expect(onSarsAssessedLineItemsChange).toHaveBeenCalledWith([{ sarsCode: "3", amount: 0 }]);
   });
 });

@@ -37,8 +37,11 @@ export function AssessmentWizard() {
     // it, so the form must start with defaults and swap in stored data once
     // mounted on the client rather than during the initial render.
     const stored = loadStoredFormState();
+    // Merge over the defaults rather than replacing wholesale, so a field
+    // added after a user's data was last saved (absent from their stored
+    // JSON) falls back to its default instead of being undefined.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stored) setForm(stored);
+    if (stored) setForm((prev) => ({ ...prev, ...stored }));
     hasLoadedFromStorage.current = true;
   }, []);
 
@@ -165,6 +168,10 @@ export function AssessmentWizard() {
             sarsAssessedTaxPayable={form.sarsAssessedTaxPayable}
             onSarsAssessedTaxPayableChange={(sarsAssessedTaxPayable) =>
               setForm((prev) => ({ ...prev, sarsAssessedTaxPayable }))
+            }
+            sarsAssessedLineItems={form.sarsAssessedLineItems}
+            onSarsAssessedLineItemsChange={(sarsAssessedLineItems) =>
+              setForm((prev) => ({ ...prev, sarsAssessedLineItems }))
             }
           />
         )}
