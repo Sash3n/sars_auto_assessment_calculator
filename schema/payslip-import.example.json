@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "taxYear": "2025/26",
+  "lineItems": [
+    {
+      "month": "2025-03",
+      "employer": "Old Co",
+      "category": "basic_salary",
+      "sarsCode": "3601",
+      "amount": 18801.38
+    },
+    {
+      "month": "2025-03",
+      "employer": "Old Co",
+      "category": "paye",
+      "amount": 3567.16
+    },
+    {
+      "month": "2025-03",
+      "employer": "Old Co",
+      "category": "uif",
+      "amount": 177.12
+    },
+    {
+      "month": "2025-03",
+      "employer": "Old Co",
+      "category": "employer_retirement_fringe_benefit",
+      "sarsCode": "3817",
+      "amount": 564.04
+    },
+    {
+      "month": "2026-02",
+      "employer": "New Co",
+      "category": "basic_salary",
+      "amount": 28000
+    },
+    {
+      "month": "2026-02",
+      "employer": "New Co",
+      "category": "employee_retirement_contribution",
+      "amount": 4200
+    }
+  ]
+}
