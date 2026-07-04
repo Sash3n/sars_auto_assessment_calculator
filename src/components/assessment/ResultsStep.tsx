@@ -2,6 +2,7 @@
 
 import type { AssessmentResult } from "@/lib/tax-engine/assess";
 import { findBracketIndex } from "@/lib/tax-engine/brackets";
+import type { SarsAssessedLineItem } from "@/lib/tax-engine/sarsCodeComparison";
 import { TAX_YEAR_TABLES } from "@/lib/tax-engine/tax-tables";
 import { formatCurrency } from "@/lib/format";
 import { StatCard } from "./StatCard";
@@ -10,6 +11,8 @@ type ResultsStepProps = {
   result: AssessmentResult;
   sarsAssessedTaxPayable: number | undefined;
   onSarsAssessedTaxPayableChange: (value: number | undefined) => void;
+  sarsAssessedLineItems: SarsAssessedLineItem[];
+  onSarsAssessedLineItemsChange: (items: SarsAssessedLineItem[]) => void;
 };
 
 function TaxBracketBar({ taxableIncome, taxYear }: { taxableIncome: number; taxYear: string }) {
@@ -47,9 +50,21 @@ export function ResultsStep({
   result,
   sarsAssessedTaxPayable,
   onSarsAssessedTaxPayableChange,
+  sarsAssessedLineItems,
+  onSarsAssessedLineItemsChange,
 }: ResultsStepProps) {
   const owesSars = result.balance > 0;
   const isBalanced = result.balance === 0;
+
+  function updateLineItem(index: number, field: keyof SarsAssessedLineItem, value: string | number) {
+    onSarsAssessedLineItemsChange(
+      sarsAssessedLineItems.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    );
+  }
+
+  function removeLineItem(index: number) {
+    onSarsAssessedLineItemsChange(sarsAssessedLineItems.filter((_, i) => i !== index));
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -288,6 +303,100 @@ export function ResultsStep({
                       {formatCurrency(result.sarsComparison.difference)}
                     </td>
                   </tr>
+                </tbody>
+              </table>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="card bg-base-100 shadow-sm">
+        <div className="card-body">
+          <h3 className="card-title text-base">Compare by SARS code (optional)</h3>
+          <p className="text-sm text-base-content/60">
+            Enter individual source-code amounts from your SARS ITA34 to see exactly which code
+            differs, instead of just an overall total.
+          </p>
+
+          {sarsAssessedLineItems.length === 0 && (
+            <p className="text-xs text-base-content/60">No SARS codes added yet.</p>
+          )}
+
+          {sarsAssessedLineItems.map((item, index) => (
+            <div key={index} className="flex items-end gap-2">
+              <label className="flex flex-col gap-1">
+                <span className="text-xs">SARS code</span>
+                <input
+                  type="text"
+                  className="input input-sm w-24"
+                  aria-label={`SARS code row ${index + 1}`}
+                  value={item.sarsCode}
+                  placeholder="3601"
+                  onChange={(e) => updateLineItem(index, "sarsCode", e.target.value)}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs">Amount</span>
+                <input
+                  type="number"
+                  min={0}
+                  className="input input-sm money"
+                  aria-label={`SARS amount row ${index + 1}`}
+                  value={item.amount === 0 ? "" : item.amount}
+                  placeholder="0"
+                  onChange={(e) => updateLineItem(index, "amount", Number(e.target.value) || 0)}
+                />
+              </label>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm text-error"
+                aria-label={`Remove SARS code row ${index + 1}`}
+                onClick={() => removeLineItem(index)}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            className="btn btn-outline btn-sm self-start"
+            onClick={() => onSarsAssessedLineItemsChange([...sarsAssessedLineItems, { sarsCode: "", amount: 0 }])}
+          >
+            + Add SARS code
+          </button>
+
+          {result.sarsCodeComparison && result.sarsCodeComparison.length > 0 && (
+            <>
+              <h4 className="mt-2 text-sm font-medium">Compared by SARS code</h4>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Your amount</th>
+                    <th>SARS&rsquo;s amount</th>
+                    <th>Difference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.sarsCodeComparison.map((row) => (
+                    <tr key={row.sarsCode}>
+                      <td>{row.sarsCode}</td>
+                      <td className="money">{formatCurrency(row.yourAmount)}</td>
+                      <td className="money">{formatCurrency(row.sarsAmount)}</td>
+                      <td
+                        className={`money ${
+                          row.difference === 0
+                            ? ""
+                            : row.difference > 0
+                              ? "text-error"
+                              : "text-success"
+                        }`}
+                      >
+                        {formatCurrency(row.difference)}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </>

@@ -8,6 +8,11 @@ import { calculateTaxableTravelReimbursement } from "./travel";
 import { calculateHomeOfficeDeduction } from "./homeOffice";
 import { calculateTaxableCapitalGain } from "./capitalGains";
 import { summarizeLineItems, type PayslipLineItem } from "./payslips";
+import {
+  compareLineItemsBySarsCode,
+  type SarsAssessedLineItem,
+  type SarsCodeComparisonRow,
+} from "./sarsCodeComparison";
 import { TAX_YEAR_TABLES, DEFAULT_TAX_YEAR, type TaxYearTable } from "./tax-tables";
 
 const DONATIONS_DEDUCTION_CAP = 0.1; // s18A: capped at 10% of taxable income
@@ -47,6 +52,8 @@ export type AssessmentInput = {
   isPrimaryResidenceDisposal?: boolean;
   /** Manually entered SARS ITA34 tax payable, for the comparison view */
   sarsAssessedTaxPayable?: number;
+  /** Manually entered SARS ITA34 amounts by source code, for the code-by-code comparison view */
+  sarsAssessedLineItems?: SarsAssessedLineItem[];
 };
 
 export type AssessmentResult = {
@@ -84,6 +91,7 @@ export type AssessmentResult = {
   rental: ReturnType<typeof calculateNetRentalIncome>;
   payslipSummary: ReturnType<typeof summarizeLineItems>;
   sarsComparison: { sarsAssessedTaxPayable: number; difference: number } | null;
+  sarsCodeComparison: SarsCodeComparisonRow[] | null;
 };
 
 function resolveTaxYearTable(taxYear: string | undefined): TaxYearTable {
@@ -192,6 +200,11 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
           difference: taxPayable - input.sarsAssessedTaxPayable,
         };
 
+  const sarsCodeComparison =
+    input.sarsAssessedLineItems === undefined || input.sarsAssessedLineItems.length === 0
+      ? null
+      : compareLineItemsBySarsCode(input.payslips, input.sarsAssessedLineItems);
+
   return {
     taxYear: table.year,
     income: {
@@ -232,5 +245,6 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
     rental,
     payslipSummary,
     sarsComparison,
+    sarsCodeComparison,
   };
 }
