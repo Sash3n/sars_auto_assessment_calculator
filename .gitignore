@@ -44,3 +44,9 @@ docs/notes/
 .pnp
 .pnp.*
 .vercel
+
+# Python (tools/payslip-extractor)
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
