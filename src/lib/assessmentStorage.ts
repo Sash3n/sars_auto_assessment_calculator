@@ -1,6 +1,9 @@
 import type { FormState } from "@/components/assessment/formState";
 
-export const STORAGE_KEY = "sars-assessment-form-v1";
+// v2: FormState.payslips moved from a flat MonthlyPayslip[12] to a
+// PayslipLineItem[] (multi-employer support) — the shape changed enough
+// that old data is simply not read rather than migrated in place.
+export const STORAGE_KEY = "sars-assessment-form-v2";
 
 export function loadStoredFormState(): FormState | null {
   if (typeof window === "undefined") return null;

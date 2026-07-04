@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { summarizePayslips, type NumericPayslipField } from "@/lib/tax-engine/payslips";
+import { summarizeLineItems } from "@/lib/tax-engine/payslips";
 import { loadStoredFormState, saveFormState } from "@/lib/assessmentStorage";
 import { AssessmentShell, type AssessmentStep } from "./AssessmentShell";
 import { Stepper } from "./Stepper";
@@ -48,25 +48,11 @@ export function AssessmentWizard() {
   }, [form]);
 
   const anomalousMonths = useMemo(
-    () => summarizePayslips(form.payslips).anomalousMonths,
+    () => summarizeLineItems(form.payslips).anomalousMonths,
     [form.payslips],
   );
 
   const result = useMemo(() => computeAssessmentResult(form), [form]);
-
-  function updatePayslipField(index: number, field: NumericPayslipField, value: number) {
-    setForm((prev) => ({
-      ...prev,
-      payslips: prev.payslips.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
-    }));
-  }
-
-  function updatePayslipEmployer(index: number, employer: string) {
-    setForm((prev) => ({
-      ...prev,
-      payslips: prev.payslips.map((p, i) => (i === index ? { ...p, employer } : p)),
-    }));
-  }
 
   const stepIndex = STEPS.findIndex((s) => s.key === stepKey);
 
@@ -96,8 +82,7 @@ export function AssessmentWizard() {
           <PayslipStep
             payslips={form.payslips}
             anomalousMonths={anomalousMonths}
-            onChange={updatePayslipField}
-            onEmployerChange={updatePayslipEmployer}
+            onChange={(payslips) => setForm((prev) => ({ ...prev, payslips }))}
           />
         )}
 

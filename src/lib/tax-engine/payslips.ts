@@ -1,53 +1,5 @@
-export type MonthlyPayslip = {
-  grossSalary: number;
-  payeDeducted: number;
-  uif: number;
-  retirementContribution: number;
-  employer?: string;
-  /** Employer's pension/provident fund contribution (SARS 3817-style): a
-   * taxable fringe benefit that's also a deemed employee contribution. */
-  employerRetirementFringeBenefit?: number;
-  /** General taxable fringe benefits (SARS 3801-style, e.g. company car, medical aid) */
-  generalFringeBenefit?: number;
-};
-
-/** MonthlyPayslip's numeric fields, i.e. everything except the employer name. */
-export type NumericPayslipField = Exclude<keyof MonthlyPayslip, "employer">;
-
-export const NUMERIC_PAYSLIP_FIELDS: NumericPayslipField[] = [
-  "grossSalary",
-  "payeDeducted",
-  "uif",
-  "retirementContribution",
-  "employerRetirementFringeBenefit",
-  "generalFringeBenefit",
-];
-
-/** True if any field of a monthly payslip (including the employer name) has been filled in. */
-export function hasPayslipData(payslip: MonthlyPayslip): boolean {
-  return (
-    NUMERIC_PAYSLIP_FIELDS.some((field) => (payslip[field] ?? 0) > 0) ||
-    (payslip.employer ?? "").trim().length > 0
-  );
-}
-
-export type PayslipSummary = {
-  totalGrossSalary: number;
-  totalPayeDeducted: number;
-  totalUif: number;
-  totalRetirementContribution: number;
-  /** Indices (0-based) of months whose gross salary deviates >25% from the average */
-  anomalousMonths: number[];
-};
-
 const ANOMALY_THRESHOLD = 0.25;
 
-/**
- * A single income/deduction item as it appears on a payslip, tagged with
- * which employer and month it belongs to. Supersedes the flat MonthlyPayslip
- * shape for cases needing multiple employers or a SARS-code-level breakdown;
- * MonthlyPayslip/summarizePayslips remain for the simple single-employer path.
- */
 export type LineItemCategory =
   | "basic_salary"
   | "bonus"
@@ -59,6 +11,12 @@ export type LineItemCategory =
   | "employee_retirement_contribution"
   | "other_non_tax";
 
+/**
+ * A single income/deduction item as it appears on a payslip, tagged with
+ * which employer and month it belongs to, so a tax year can span multiple
+ * employers (e.g. a mid-year job change) or a single employer with several
+ * income categories per month.
+ */
 export type PayslipLineItem = {
   id: string;
   /** 0-based, March = 0 .. February = 11, matching the existing SA tax year order */
@@ -138,7 +96,13 @@ export const LINE_ITEM_CATEGORY_TREATMENT: Record<LineItemCategory, CategoryTrea
   },
 };
 
-export type LineItemSummary = PayslipSummary & {
+export type LineItemSummary = {
+  totalGrossSalary: number;
+  totalPayeDeducted: number;
+  totalUif: number;
+  totalRetirementContribution: number;
+  /** Indices (0-based) of months whose gross salary deviates >25% from the average */
+  anomalousMonths: number[];
   /** Gross salary summed per month (index = month), across all employers */
   perMonthGrossSalary: number[];
   perEmployerTotals: Record<
@@ -234,110 +198,4 @@ export function summarizeLineItems(
     perMonthGrossSalary,
     perEmployerTotals,
   };
-}
-
-/**
- * Bridges the simple flat MonthlyPayslip[] shape onto the richer line-item
- * model, so assessTax can be driven from PayslipLineItem[] uniformly while
- * the wizard's UI still only needs the 4-field-per-month fast path.
- */
-export function monthlyPayslipsToLineItems(
-  payslips: MonthlyPayslip[],
-  defaultEmployer = "Employer",
-): PayslipLineItem[] {
-  const items: PayslipLineItem[] = [];
-
-  payslips.forEach((payslip, month) => {
-    const employer = payslip.employer?.trim() || defaultEmployer;
-
-    if (payslip.grossSalary > 0) {
-      items.push({
-        id: `${month}-basic_salary`,
-        month,
-        employer,
-        category: "basic_salary",
-        amount: payslip.grossSalary,
-      });
-    }
-    if (payslip.payeDeducted > 0) {
-      items.push({
-        id: `${month}-paye`,
-        month,
-        employer,
-        category: "paye",
-        amount: payslip.payeDeducted,
-      });
-    }
-    if (payslip.uif > 0) {
-      items.push({ id: `${month}-uif`, month, employer, category: "uif", amount: payslip.uif });
-    }
-    if (payslip.retirementContribution > 0) {
-      items.push({
-        id: `${month}-retirement`,
-        month,
-        employer,
-        category: "employee_retirement_contribution",
-        amount: payslip.retirementContribution,
-      });
-    }
-    if ((payslip.employerRetirementFringeBenefit ?? 0) > 0) {
-      items.push({
-        id: `${month}-employer_retirement_fringe_benefit`,
-        month,
-        employer,
-        category: "employer_retirement_fringe_benefit",
-        amount: payslip.employerRetirementFringeBenefit!,
-      });
-    }
-    if ((payslip.generalFringeBenefit ?? 0) > 0) {
-      items.push({
-        id: `${month}-general_fringe_benefit`,
-        month,
-        employer,
-        category: "general_fringe_benefit",
-        amount: payslip.generalFringeBenefit!,
-      });
-    }
-  });
-
-  return items;
-}
-
-/**
- * Sums a user's monthly payslips for the tax year and flags months whose
- * gross salary deviates significantly from the year's average, so
- * fluctuating income (bonuses, unpaid leave, commission spikes) is
- * surfaced rather than silently averaged away.
- */
-export function summarizePayslips(payslips: MonthlyPayslip[]): PayslipSummary {
-  if (payslips.length < 1 || payslips.length > 12) {
-    throw new Error("Expected between 1 and 12 monthly payslips");
-  }
-
-  const totals = payslips.reduce(
-    (acc, p) => ({
-      totalGrossSalary: acc.totalGrossSalary + p.grossSalary,
-      totalPayeDeducted: acc.totalPayeDeducted + p.payeDeducted,
-      totalUif: acc.totalUif + p.uif,
-      totalRetirementContribution:
-        acc.totalRetirementContribution + p.retirementContribution,
-    }),
-    {
-      totalGrossSalary: 0,
-      totalPayeDeducted: 0,
-      totalUif: 0,
-      totalRetirementContribution: 0,
-    },
-  );
-
-  const averageGrossSalary = totals.totalGrossSalary / payslips.length;
-
-  const anomalousMonths = payslips
-    .map((p, index) => ({ index, deviation: Math.abs(p.grossSalary - averageGrossSalary) }))
-    .filter(({ deviation }) =>
-      averageGrossSalary > 0 ? deviation / averageGrossSalary > ANOMALY_THRESHOLD : false,
-    )
-    .map(({ index }) => index);
-
-  return { ...totals, anomalousMonths };
 }

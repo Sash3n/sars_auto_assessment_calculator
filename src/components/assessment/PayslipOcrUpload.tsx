@@ -3,22 +3,22 @@
 import { useState, type ChangeEvent } from "react";
 import { extractNumbersFromText, type ExtractedNumber } from "@/lib/ocr/extractNumbers";
 import { suggestField } from "@/lib/ocr/suggestField";
-import type { NumericPayslipField } from "@/lib/tax-engine/payslips";
+import type { LineItemCategory } from "@/lib/tax-engine/payslips";
 import { formatCurrency } from "@/lib/format";
 
-const FIELD_OPTIONS: { field: NumericPayslipField; label: string }[] = [
-  { field: "grossSalary", label: "Gross" },
-  { field: "payeDeducted", label: "PAYE" },
+const FIELD_OPTIONS: { field: LineItemCategory; label: string }[] = [
+  { field: "basic_salary", label: "Gross" },
+  { field: "paye", label: "PAYE" },
   { field: "uif", label: "UIF" },
-  { field: "retirementContribution", label: "Retirement" },
-  { field: "employerRetirementFringeBenefit", label: "Employer retirement FB" },
-  { field: "generalFringeBenefit", label: "General FB" },
+  { field: "employee_retirement_contribution", label: "Retirement" },
+  { field: "employer_retirement_fringe_benefit", label: "Employer retirement FB" },
+  { field: "general_fringe_benefit", label: "General FB" },
 ];
 
 type Status = "idle" | "scanning" | "done" | "error";
 
 type PayslipOcrUploadProps = {
-  onAssign: (field: NumericPayslipField, value: number) => void;
+  onAssign: (category: LineItemCategory, value: number) => void;
 };
 
 export function PayslipOcrUpload({ onAssign }: PayslipOcrUploadProps) {

@@ -1,49 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  summarizePayslips,
-  summarizeLineItems,
-  monthlyPayslipsToLineItems,
-  type PayslipLineItem,
-} from "./payslips";
-
-describe("summarizePayslips", () => {
-  const flatYear = Array.from({ length: 12 }, () => ({
-    grossSalary: 30_000,
-    payeDeducted: 5_000,
-    uif: 177.12,
-    retirementContribution: 1_500,
-  }));
-
-  it("sums gross salary, PAYE and retirement contributions across all months", () => {
-    const result = summarizePayslips(flatYear);
-    expect(result.totalGrossSalary).toBe(360_000);
-    expect(result.totalPayeDeducted).toBe(60_000);
-    expect(result.totalRetirementContribution).toBe(18_000);
-  });
-
-  it("flags no anomalies when income is flat across the year", () => {
-    const result = summarizePayslips(flatYear);
-    expect(result.anomalousMonths).toEqual([]);
-  });
-
-  it("flags a month that deviates more than 25% from the year's average", () => {
-    const months = [...flatYear];
-    months[11] = { ...months[11], grossSalary: 90_000 }; // December bonus
-    const result = summarizePayslips(months);
-    expect(result.anomalousMonths).toContain(11);
-  });
-
-  it("throws if fewer than 1 or more than 12 months are provided", () => {
-    expect(() => summarizePayslips([])).toThrow();
-    expect(() => summarizePayslips(Array(13).fill(flatYear[0]))).toThrow();
-  });
-
-  it("handles a partial (fewer than 12 month) tax year without false anomalies", () => {
-    const result = summarizePayslips(flatYear.slice(0, 6));
-    expect(result.anomalousMonths).toEqual([]);
-    expect(result.totalGrossSalary).toBe(180_000);
-  });
-});
+import { summarizeLineItems, type PayslipLineItem } from "./payslips";
 
 describe("summarizeLineItems", () => {
   function item(overrides: Partial<PayslipLineItem>): PayslipLineItem {
@@ -154,58 +110,5 @@ describe("summarizeLineItems", () => {
       6,
     );
     expect(result.perMonthGrossSalary).toHaveLength(6);
-  });
-});
-
-describe("monthlyPayslipsToLineItems", () => {
-  it("converts a flat MonthlyPayslip array into equivalent line items under one employer", () => {
-    const payslips = [
-      { grossSalary: 20_000, payeDeducted: 3_000, uif: 177.12, retirementContribution: 1_000 },
-      { grossSalary: 0, payeDeducted: 0, uif: 0, retirementContribution: 0 },
-    ];
-
-    const lineItems = monthlyPayslipsToLineItems(payslips);
-    const summary = summarizeLineItems(lineItems, payslips.length);
-
-    expect(summary.totalGrossSalary).toBe(20_000);
-    expect(summary.totalPayeDeducted).toBe(3_000);
-    expect(summary.totalUif).toBeCloseTo(177.12, 2);
-    expect(summary.totalRetirementContribution).toBe(1_000);
-  });
-
-  it("omits zero-amount fields rather than emitting empty line items", () => {
-    const payslips = [{ grossSalary: 0, payeDeducted: 0, uif: 0, retirementContribution: 0 }];
-    expect(monthlyPayslipsToLineItems(payslips)).toEqual([]);
-  });
-
-  it("converts employer retirement fringe benefit and general fringe benefit fields", () => {
-    const payslips = [
-      {
-        grossSalary: 300_000,
-        payeDeducted: 0,
-        uif: 0,
-        retirementContribution: 0,
-        employerRetirementFringeBenefit: 6_449,
-        generalFringeBenefit: 367,
-      },
-    ];
-
-    const lineItems = monthlyPayslipsToLineItems(payslips);
-    const summary = summarizeLineItems(lineItems, 1);
-
-    expect(summary.totalGrossSalary).toBeCloseTo(300_000 + 6_449 + 367, 2);
-    expect(summary.totalRetirementContribution).toBeCloseTo(6_449, 2);
-  });
-
-  it("tags line items with each payslip's own employer, falling back to a default", () => {
-    const payslips = [
-      { employer: "Acme Ltd", grossSalary: 20_000, payeDeducted: 0, uif: 0, retirementContribution: 0 },
-      { grossSalary: 5_000, payeDeducted: 0, uif: 0, retirementContribution: 0 },
-    ];
-
-    const lineItems = monthlyPayslipsToLineItems(payslips);
-
-    expect(lineItems.find((i) => i.month === 0)?.employer).toBe("Acme Ltd");
-    expect(lineItems.find((i) => i.month === 1)?.employer).toBe("Employer");
   });
 });
