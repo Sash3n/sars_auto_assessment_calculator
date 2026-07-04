@@ -48,11 +48,13 @@ sudo apt-get install tesseract-ocr poppler-utils
 brew install tesseract poppler
 ```
 
-Then install the Python dependencies:
+Then install the Python dependencies and the package itself (editable, so
+`payslip_extractor` is importable regardless of your working directory):
 
 ```bash
 cd tools/payslip-extractor
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Usage

@@ -40,5 +40,8 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r tools/payslip-extractor/requirements.txt
 
+      - name: Install payslip-extractor (editable)
+        run: pip install -e tools/payslip-extractor
+
       - name: Test
         run: pytest tools/payslip-extractor
