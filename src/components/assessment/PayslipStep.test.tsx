@@ -16,13 +16,13 @@ vi.mock("tesseract.js", () => ({
 
 describe("PayslipStep", () => {
   it("renders a card for all 12 months of the SA tax year", () => {
-    render(<PayslipStep payslips={[]} anomalousMonths={[]} onChange={() => {}} />);
+    render(<PayslipStep taxYear="2025/26" payslips={[]} anomalousMonths={[]} onChange={() => {}} />);
     expect(screen.getByText("March")).toBeInTheDocument();
     expect(screen.getByText("February")).toBeInTheDocument();
   });
 
   it("shows a Pending badge and no-employer message for months with no blocks", () => {
-    render(<PayslipStep payslips={[]} anomalousMonths={[]} onChange={() => {}} />);
+    render(<PayslipStep taxYear="2025/26" payslips={[]} anomalousMonths={[]} onChange={() => {}} />);
     expect(screen.getAllByText("Pending")).toHaveLength(12);
     expect(screen.getAllByText("No employer added for this month yet.")).toHaveLength(12);
   });
@@ -30,7 +30,7 @@ describe("PayslipStep", () => {
   it("calls onChange with a new employer block when '+ Add employer' is clicked", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<PayslipStep payslips={[]} anomalousMonths={[]} onChange={onChange} />);
+    render(<PayslipStep taxYear="2025/26" payslips={[]} anomalousMonths={[]} onChange={onChange} />);
 
     await user.click(screen.getAllByText("+ Add employer")[0]);
 
@@ -43,7 +43,7 @@ describe("PayslipStep", () => {
     const payslips = addEmployerBlock([], 0).map((item) =>
       item.category === "basic_salary" ? { ...item, amount: 45_000 } : item,
     );
-    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
+    render(<PayslipStep taxYear="2025/26" payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
     expect(screen.getAllByText("Entered")).toHaveLength(1);
     expect(screen.getAllByText("Pending")).toHaveLength(11);
   });
@@ -52,12 +52,12 @@ describe("PayslipStep", () => {
     const blank = addEmployerBlock([], 0);
     const payslips = renameEmployerBlock(blank, getMonthBlocks(blank, 0)[0].blockId, "Acme Ltd");
 
-    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
+    render(<PayslipStep taxYear="2025/26" payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
     expect(screen.getAllByText("Entered")).toHaveLength(1);
   });
 
   it("shows an Unusual badge only for flagged months", () => {
-    render(<PayslipStep payslips={[]} anomalousMonths={[11]} onChange={() => {}} />);
+    render(<PayslipStep taxYear="2025/26" payslips={[]} anomalousMonths={[11]} onChange={() => {}} />);
     expect(screen.getAllByText("Unusual")).toHaveLength(1);
   });
 
@@ -65,7 +65,7 @@ describe("PayslipStep", () => {
     let payslips = addEmployerBlock([], 0);
     payslips = addEmployerBlock(payslips, 0);
 
-    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
+    render(<PayslipStep taxYear="2025/26" payslips={payslips} anomalousMonths={[]} onChange={() => {}} />);
 
     expect(screen.getByLabelText("March employer 1")).toBeInTheDocument();
     expect(screen.getByLabelText("March employer 2")).toBeInTheDocument();
@@ -76,7 +76,7 @@ describe("PayslipStep", () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     const payslips = addEmployerBlock([], 0);
-    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={onChange} />);
+    render(<PayslipStep taxYear="2025/26" payslips={payslips} anomalousMonths={[]} onChange={onChange} />);
 
     await user.type(screen.getByLabelText("March employer"), "A");
 
@@ -88,7 +88,7 @@ describe("PayslipStep", () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     const payslips = addEmployerBlock([], 0);
-    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={onChange} />);
+    render(<PayslipStep taxYear="2025/26" payslips={payslips} anomalousMonths={[]} onChange={onChange} />);
 
     await user.type(screen.getByLabelText("March basic_salary"), "5");
 
@@ -103,7 +103,7 @@ describe("PayslipStep", () => {
     payslips = addEmployerBlock(payslips, 0);
     const keptBlockId = getMonthBlocks(payslips, 0)[1].blockId;
 
-    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={onChange} />);
+    render(<PayslipStep taxYear="2025/26" payslips={payslips} anomalousMonths={[]} onChange={onChange} />);
     await user.click(screen.getAllByText("Remove")[0]);
 
     const result = onChange.mock.calls[0][0] as PayslipLineItem[];
@@ -117,7 +117,7 @@ describe("PayslipStep", () => {
     recognizeMock.mockResolvedValue({ data: { text: "Pay as you Earn 3 506.27" } });
     const payslips = addEmployerBlock([], 0);
 
-    render(<PayslipStep payslips={payslips} anomalousMonths={[]} onChange={onChange} />);
+    render(<PayslipStep taxYear="2025/26" payslips={payslips} anomalousMonths={[]} onChange={onChange} />);
 
     const marchUpload = screen.getAllByLabelText("Upload payslip image")[0];
     const file = new File(["fake"], "payslip.png", { type: "image/png" });

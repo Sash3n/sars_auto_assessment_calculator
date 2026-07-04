@@ -11,6 +11,7 @@ import {
   updateBlockCategoryAmount,
 } from "./payslipBlocks";
 import { PayslipOcrUpload } from "./PayslipOcrUpload";
+import { PayslipJsonImport } from "./PayslipJsonImport";
 
 const SA_TAX_YEAR_MONTHS = [
   "March",
@@ -40,6 +41,7 @@ const CATEGORY_LABELS: Record<LineItemCategory, string> = {
 };
 
 type PayslipStepProps = {
+  taxYear: string;
   payslips: PayslipLineItem[];
   anomalousMonths: number[];
   onChange: (payslips: PayslipLineItem[]) => void;
@@ -51,10 +53,13 @@ function monthStatus(payslips: PayslipLineItem[], month: number, isAnomalous: bo
   return { label: "Pending", badgeClass: "badge-ghost" };
 }
 
-export function PayslipStep({ payslips, anomalousMonths, onChange }: PayslipStepProps) {
+export function PayslipStep({ taxYear, payslips, anomalousMonths, onChange }: PayslipStepProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {SA_TAX_YEAR_MONTHS.map((monthLabel, month) => {
+    <div className="flex flex-col gap-4">
+      <PayslipJsonImport taxYear={taxYear} payslips={payslips} onChange={onChange} />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {SA_TAX_YEAR_MONTHS.map((monthLabel, month) => {
         const isAnomalous = anomalousMonths.includes(month);
         const status = monthStatus(payslips, month, isAnomalous);
         const blocks = getMonthBlocks(payslips, month);
@@ -179,7 +184,8 @@ export function PayslipStep({ payslips, anomalousMonths, onChange }: PayslipStep
             </div>
           </div>
         );
-      })}
+        })}
+      </div>
     </div>
   );
 }

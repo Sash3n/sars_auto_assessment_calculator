@@ -80,6 +80,7 @@ export function AssessmentWizard() {
 
         {stepKey === "payslips" && (
           <PayslipStep
+            taxYear={form.taxYear}
             payslips={form.payslips}
             anomalousMonths={anomalousMonths}
             onChange={(payslips) => setForm((prev) => ({ ...prev, payslips }))}
