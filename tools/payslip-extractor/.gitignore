@@ -1,0 +1,4 @@
+# Real payslip samples are personal financial documents -- never commit
+# them, even for local testing. Only synthetic fixtures live in tests/.
+samples/*
+!samples/.gitkeep

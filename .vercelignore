@@ -1,0 +1,4 @@
+# The payslip extraction tool is a separate, local-only Python CLI, never
+# part of the deployed web app. Next.js's build already only touches
+# src/app, so this is defense-in-depth rather than strictly required.
+tools/

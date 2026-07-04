@@ -1,0 +1,44 @@
+name: Payslip Extractor
+
+# Scoped to only the tool's own files so ordinary web-app PRs don't pay a
+# Python setup cost -- kept as a separate workflow (rather than a job in
+# ci.yml) since job-level path filters aren't supported.
+on:
+  pull_request:
+    branches: [dev, prod, main]
+    paths:
+      - "tools/payslip-extractor/**"
+      - "schema/payslip-import.schema.json"
+      - ".github/workflows/payslip-extractor.yml"
+  push:
+    branches: [dev, prod, main]
+    paths:
+      - "tools/payslip-extractor/**"
+      - "schema/payslip-import.schema.json"
+      - ".github/workflows/payslip-extractor.yml"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  payslip-extractor-tests:
+    name: payslip-extractor tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tools/payslip-extractor/requirements.txt
+
+      - name: Install system dependencies (Tesseract + Poppler)
+        run: sudo apt-get update && sudo apt-get install -y tesseract-ocr poppler-utils
+
+      - name: Install Python dependencies
+        run: pip install -r tools/payslip-extractor/requirements.txt
+
+      - name: Test
+        run: pytest tools/payslip-extractor

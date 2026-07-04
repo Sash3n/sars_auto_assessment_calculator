@@ -1,0 +1,8 @@
+[project]
+name = "payslip-extractor"
+version = "0.1.0"
+description = "Local, fully offline extraction of SA payslip line items into the SARS Auto-Assessment Calculator's JSON import format."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
