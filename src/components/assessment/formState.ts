@@ -1,6 +1,7 @@
 import { assessTax, type AssessmentResult } from "@/lib/tax-engine/assess";
 import type { PayslipLineItem } from "@/lib/tax-engine/payslips";
 import type { RentalProperty } from "@/lib/tax-engine/rental";
+import type { SarsAssessedLineItem } from "@/lib/tax-engine/sarsCodeComparison";
 import { DEFAULT_TAX_YEAR } from "@/lib/tax-engine/tax-tables";
 import { hasAnyPayslipData } from "./payslipBlocks";
 
@@ -23,6 +24,7 @@ export type FormState = {
   propertyDisposalBaseCost: number;
   isPrimaryResidenceDisposal: boolean;
   sarsAssessedTaxPayable: number | undefined;
+  sarsAssessedLineItems: SarsAssessedLineItem[];
   payslips: PayslipLineItem[];
   rentalProperties: RentalProperty[];
   freelanceIncome: number;
@@ -49,6 +51,7 @@ export function createInitialFormState(): FormState {
     propertyDisposalBaseCost: 0,
     isPrimaryResidenceDisposal: false,
     sarsAssessedTaxPayable: undefined,
+    sarsAssessedLineItems: [],
     payslips: [],
     rentalProperties: [],
     freelanceIncome: 0,
@@ -90,5 +93,6 @@ export function computeAssessmentResult(form: FormState): AssessmentResult {
     propertyDisposalBaseCost: form.propertyDisposalBaseCost,
     isPrimaryResidenceDisposal: form.isPrimaryResidenceDisposal,
     sarsAssessedTaxPayable: form.sarsAssessedTaxPayable,
+    sarsAssessedLineItems: form.sarsAssessedLineItems ?? [],
   });
 }

@@ -113,6 +113,27 @@ describe("assessTax (2025/26 golden values)", () => {
     expect(result.sarsComparison?.difference).toBeCloseTo(100_272 - 95_000, 2);
   });
 
+  it("has a null sarsCodeComparison when no SARS-assessed line items are supplied", () => {
+    const result = assessTax({ age: 35, payslips: flatSalaryPayslips(500_000) });
+    expect(result.sarsCodeComparison).toBeNull();
+  });
+
+  it("produces a code-by-code comparison when SARS-assessed line items are supplied", () => {
+    const payslips: PayslipLineItem[] = [
+      { id: "1", month: 0, employer: "Old Co", category: "basic_salary", sarsCode: "3601", amount: 47_365 },
+    ];
+
+    const result = assessTax({
+      age: 35,
+      payslips,
+      sarsAssessedLineItems: [{ sarsCode: "3601", amount: 45_000 }],
+    });
+
+    expect(result.sarsCodeComparison).toEqual([
+      { sarsCode: "3601", yourAmount: 47_365, sarsAmount: 45_000, difference: 2_365 },
+    ]);
+  });
+
   it("never produces a negative taxable income or tax payable", () => {
     const result = assessTax({
       age: 35,
