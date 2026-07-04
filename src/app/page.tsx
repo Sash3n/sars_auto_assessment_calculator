@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Dashboard } from "@/components/assessment/Dashboard";
 
 export default function Home() {
   return (
@@ -16,21 +16,7 @@ export default function Home() {
           Check your assessment before SARS does
         </h1>
 
-        <div className="card bg-base-100 shadow-sm">
-          <div className="card-body">
-            <p className="text-base-content/70">
-              Upload 12 months of payslips, add any rental, freelance or
-              investment income, and get an independent estimate of whether
-              SARS owes you a refund or you owe SARS &mdash; before your
-              40-business-day correction window closes.
-            </p>
-            <div className="card-actions justify-end pt-2">
-              <Link href="/assess" className="btn btn-primary">
-                Start assessment
-              </Link>
-            </div>
-          </div>
-        </div>
+        <Dashboard />
       </main>
 
       <footer className="footer footer-center bg-base-100 p-4 text-xs text-base-content/60">

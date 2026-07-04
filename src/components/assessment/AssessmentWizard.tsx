@@ -1,152 +1,193 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { assessTax } from "@/lib/tax-engine/assess";
-import { summarizePayslips, type MonthlyPayslip } from "@/lib/tax-engine/payslips";
-import type { RentalProperty } from "@/lib/tax-engine/rental";
-import { DEFAULT_TAX_YEAR } from "@/lib/tax-engine/tax-tables";
-import { PayslipStep, createEmptyPayslips } from "./PayslipStep";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { summarizeLineItems } from "@/lib/tax-engine/payslips";
+import { loadStoredFormState, saveFormState } from "@/lib/assessmentStorage";
+import { AssessmentShell, type AssessmentStep } from "./AssessmentShell";
+import { Stepper } from "./Stepper";
+import { PayslipStep } from "./PayslipStep";
 import { OtherIncomeStep } from "./OtherIncomeStep";
-import { ProfileAndDeductionsStep } from "./ProfileAndDeductionsStep";
+import { ProfileStep } from "./ProfileStep";
+import { DeductionsStep } from "./DeductionsStep";
 import { ResultsStep } from "./ResultsStep";
+import { computeAssessmentResult, createInitialFormState } from "./formState";
 
-const STEPS = ["Profile", "Payslips", "Other income", "Results"] as const;
-
-type FormState = {
-  age: number;
-  medicalSchemeMembers: number;
-  additionalRetirementContributions: number;
-  donations: number;
-  sarsAssessedTaxPayable: number | undefined;
-  payslips: MonthlyPayslip[];
-  rentalProperties: RentalProperty[];
-  freelanceIncome: number;
-  interestIncome: number;
-};
-
-function createInitialState(): FormState {
-  return {
-    age: 0,
-    medicalSchemeMembers: 0,
-    additionalRetirementContributions: 0,
-    donations: 0,
-    sarsAssessedTaxPayable: undefined,
-    payslips: createEmptyPayslips(),
-    rentalProperties: [],
-    freelanceIncome: 0,
-    interestIncome: 0,
-  };
-}
+const STEPS: AssessmentStep[] = [
+  { key: "profile", label: "Profile" },
+  { key: "payslips", label: "Payslips" },
+  { key: "other-income", label: "Other Income" },
+  { key: "deductions", label: "Deductions" },
+  { key: "results", label: "Results" },
+];
 
 export function AssessmentWizard() {
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState<FormState>(createInitialState);
+  const searchParams = useSearchParams();
+  const requestedStep = searchParams?.get("step") ?? null;
+  const initialStepKey = STEPS.some((step) => step.key === requestedStep)
+    ? requestedStep!
+    : STEPS[0].key;
+
+  const [stepKey, setStepKey] = useState<string>(initialStepKey);
+  const [form, setForm] = useState(createInitialFormState);
+  const hasLoadedFromStorage = useRef(false);
+
+  useEffect(() => {
+    // Deliberate one-time hydration from localStorage: SSR has no access to
+    // it, so the form must start with defaults and swap in stored data once
+    // mounted on the client rather than during the initial render.
+    const stored = loadStoredFormState();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored) setForm(stored);
+    hasLoadedFromStorage.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedFromStorage.current) return;
+    saveFormState(form);
+  }, [form]);
 
   const anomalousMonths = useMemo(
-    () => summarizePayslips(form.payslips).anomalousMonths,
+    () => summarizeLineItems(form.payslips).anomalousMonths,
     [form.payslips],
   );
 
-  const result = useMemo(
-    () =>
-      assessTax({
-        taxYear: DEFAULT_TAX_YEAR,
-        age: form.age,
-        payslips: form.payslips,
-        rentalProperties: form.rentalProperties,
-        freelanceIncome: form.freelanceIncome,
-        interestIncome: form.interestIncome,
-        medicalSchemeMembers: form.medicalSchemeMembers,
-        additionalRetirementContributions: form.additionalRetirementContributions,
-        donations: form.donations,
-        sarsAssessedTaxPayable: form.sarsAssessedTaxPayable,
-      }),
-    [form],
-  );
+  const result = useMemo(() => computeAssessmentResult(form), [form]);
 
-  function updatePayslipField(index: number, field: keyof MonthlyPayslip, value: number) {
-    setForm((prev) => ({
-      ...prev,
-      payslips: prev.payslips.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
-    }));
-  }
+  const stepIndex = STEPS.findIndex((s) => s.key === stepKey);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10">
-      <ul className="steps w-full">
-        {STEPS.map((label, index) => (
-          <li key={label} className={`step ${index <= step ? "step-primary" : ""}`}>
-            {label}
-          </li>
-        ))}
-      </ul>
+    <AssessmentShell steps={STEPS} currentStepKey={stepKey} onStepChange={setStepKey}>
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10">
+        <Stepper steps={STEPS} currentStepKey={stepKey} onStepChange={setStepKey} />
 
-      {step === 0 && (
-        <ProfileAndDeductionsStep
-          age={form.age}
-          medicalSchemeMembers={form.medicalSchemeMembers}
-          additionalRetirementContributions={form.additionalRetirementContributions}
-          donations={form.donations}
-          sarsAssessedTaxPayable={form.sarsAssessedTaxPayable}
-          onAgeChange={(age) => setForm((prev) => ({ ...prev, age }))}
-          onMedicalSchemeMembersChange={(medicalSchemeMembers) =>
-            setForm((prev) => ({ ...prev, medicalSchemeMembers }))
-          }
-          onAdditionalRetirementContributionsChange={(additionalRetirementContributions) =>
-            setForm((prev) => ({ ...prev, additionalRetirementContributions }))
-          }
-          onDonationsChange={(donations) => setForm((prev) => ({ ...prev, donations }))}
-          onSarsAssessedTaxPayableChange={(sarsAssessedTaxPayable) =>
-            setForm((prev) => ({ ...prev, sarsAssessedTaxPayable }))
-          }
-        />
-      )}
+        {stepKey === "profile" && (
+          <ProfileStep
+            taxYear={form.taxYear}
+            age={form.age}
+            medicalSchemeMembers={form.medicalSchemeMembers}
+            hasDisability={form.hasDisability}
+            onTaxYearChange={(taxYear) => setForm((prev) => ({ ...prev, taxYear }))}
+            onAgeChange={(age) => setForm((prev) => ({ ...prev, age }))}
+            onMedicalSchemeMembersChange={(medicalSchemeMembers) =>
+              setForm((prev) => ({ ...prev, medicalSchemeMembers }))
+            }
+            onHasDisabilityChange={(hasDisability) =>
+              setForm((prev) => ({ ...prev, hasDisability }))
+            }
+          />
+        )}
 
-      {step === 1 && (
-        <PayslipStep
-          payslips={form.payslips}
-          anomalousMonths={anomalousMonths}
-          onChange={updatePayslipField}
-        />
-      )}
+        {stepKey === "payslips" && (
+          <PayslipStep
+            taxYear={form.taxYear}
+            payslips={form.payslips}
+            anomalousMonths={anomalousMonths}
+            onChange={(payslips) => setForm((prev) => ({ ...prev, payslips }))}
+          />
+        )}
 
-      {step === 2 && (
-        <OtherIncomeStep
-          rentalProperties={form.rentalProperties}
-          freelanceIncome={form.freelanceIncome}
-          interestIncome={form.interestIncome}
-          onRentalPropertiesChange={(rentalProperties) =>
-            setForm((prev) => ({ ...prev, rentalProperties }))
-          }
-          onFreelanceIncomeChange={(freelanceIncome) =>
-            setForm((prev) => ({ ...prev, freelanceIncome }))
-          }
-          onInterestIncomeChange={(interestIncome) =>
-            setForm((prev) => ({ ...prev, interestIncome }))
-          }
-        />
-      )}
+        {stepKey === "other-income" && (
+          <OtherIncomeStep
+            rentalProperties={form.rentalProperties}
+            freelanceIncome={form.freelanceIncome}
+            interestIncome={form.interestIncome}
+            propertyDisposalProceeds={form.propertyDisposalProceeds}
+            propertyDisposalBaseCost={form.propertyDisposalBaseCost}
+            isPrimaryResidenceDisposal={form.isPrimaryResidenceDisposal}
+            onRentalPropertiesChange={(rentalProperties) =>
+              setForm((prev) => ({ ...prev, rentalProperties }))
+            }
+            onFreelanceIncomeChange={(freelanceIncome) =>
+              setForm((prev) => ({ ...prev, freelanceIncome }))
+            }
+            onInterestIncomeChange={(interestIncome) =>
+              setForm((prev) => ({ ...prev, interestIncome }))
+            }
+            onPropertyDisposalProceedsChange={(propertyDisposalProceeds) =>
+              setForm((prev) => ({ ...prev, propertyDisposalProceeds }))
+            }
+            onPropertyDisposalBaseCostChange={(propertyDisposalBaseCost) =>
+              setForm((prev) => ({ ...prev, propertyDisposalBaseCost }))
+            }
+            onIsPrimaryResidenceDisposalChange={(isPrimaryResidenceDisposal) =>
+              setForm((prev) => ({ ...prev, isPrimaryResidenceDisposal }))
+            }
+          />
+        )}
 
-      {step === 3 && <ResultsStep result={result} />}
+        {stepKey === "deductions" && (
+          <DeductionsStep
+            annualMedicalContributions={form.annualMedicalContributions}
+            outOfPocketMedicalExpenses={form.outOfPocketMedicalExpenses}
+            additionalRetirementContributions={form.additionalRetirementContributions}
+            donations={form.donations}
+            businessKmTravelled={form.businessKmTravelled}
+            travelReimbursementRatePerKm={form.travelReimbursementRatePerKm}
+            homeOfficeAreaSqm={form.homeOfficeAreaSqm}
+            totalHomeAreaSqm={form.totalHomeAreaSqm}
+            monthsHomeOfficeUsed={form.monthsHomeOfficeUsed}
+            totalHomeExpenses={form.totalHomeExpenses}
+            onAnnualMedicalContributionsChange={(annualMedicalContributions) =>
+              setForm((prev) => ({ ...prev, annualMedicalContributions }))
+            }
+            onOutOfPocketMedicalExpensesChange={(outOfPocketMedicalExpenses) =>
+              setForm((prev) => ({ ...prev, outOfPocketMedicalExpenses }))
+            }
+            onAdditionalRetirementContributionsChange={(additionalRetirementContributions) =>
+              setForm((prev) => ({ ...prev, additionalRetirementContributions }))
+            }
+            onDonationsChange={(donations) => setForm((prev) => ({ ...prev, donations }))}
+            onBusinessKmTravelledChange={(businessKmTravelled) =>
+              setForm((prev) => ({ ...prev, businessKmTravelled }))
+            }
+            onTravelReimbursementRatePerKmChange={(travelReimbursementRatePerKm) =>
+              setForm((prev) => ({ ...prev, travelReimbursementRatePerKm }))
+            }
+            onHomeOfficeAreaSqmChange={(homeOfficeAreaSqm) =>
+              setForm((prev) => ({ ...prev, homeOfficeAreaSqm }))
+            }
+            onTotalHomeAreaSqmChange={(totalHomeAreaSqm) =>
+              setForm((prev) => ({ ...prev, totalHomeAreaSqm }))
+            }
+            onMonthsHomeOfficeUsedChange={(monthsHomeOfficeUsed) =>
+              setForm((prev) => ({ ...prev, monthsHomeOfficeUsed }))
+            }
+            onTotalHomeExpensesChange={(totalHomeExpenses) =>
+              setForm((prev) => ({ ...prev, totalHomeExpenses }))
+            }
+          />
+        )}
 
-      <div className="flex justify-between pt-2">
-        <button
-          type="button"
-          className="btn btn-ghost"
-          disabled={step === 0}
-          onClick={() => setStep((s) => Math.max(0, s - 1))}
-        >
-          Back
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={step === STEPS.length - 1}
-          onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
-        >
-          Next
-        </button>
+        {stepKey === "results" && (
+          <ResultsStep
+            result={result}
+            sarsAssessedTaxPayable={form.sarsAssessedTaxPayable}
+            onSarsAssessedTaxPayableChange={(sarsAssessedTaxPayable) =>
+              setForm((prev) => ({ ...prev, sarsAssessedTaxPayable }))
+            }
+          />
+        )}
+
+        <div className="flex justify-between pt-2 print:hidden">
+          <button
+            type="button"
+            className="btn btn-ghost"
+            disabled={stepIndex === 0}
+            onClick={() => setStepKey(STEPS[Math.max(0, stepIndex - 1)].key)}
+          >
+            Back
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={stepIndex === STEPS.length - 1}
+            onClick={() => setStepKey(STEPS[Math.min(STEPS.length - 1, stepIndex + 1)].key)}
+          >
+            Next
+          </button>
+        </div>
       </div>
-    </div>
+    </AssessmentShell>
   );
 }

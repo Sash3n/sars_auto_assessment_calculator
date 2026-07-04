@@ -3,7 +3,11 @@ import { calculateRetirementDeduction, calculateTaxableInterest } from "./deduct
 import { calculateNetRentalIncome, type RentalProperty } from "./rental";
 import { isLikelyProvisionalTaxpayer } from "./provisional-tax";
 import { calculateMedicalCredit, calculateRebate } from "./rebates";
-import { summarizePayslips, type MonthlyPayslip } from "./payslips";
+import { calculateAdditionalMedicalCredit } from "./medical";
+import { calculateTaxableTravelReimbursement } from "./travel";
+import { calculateHomeOfficeDeduction } from "./homeOffice";
+import { calculateTaxableCapitalGain } from "./capitalGains";
+import { summarizeLineItems, type PayslipLineItem } from "./payslips";
 import { TAX_YEAR_TABLES, DEFAULT_TAX_YEAR, type TaxYearTable } from "./tax-tables";
 
 const DONATIONS_DEDUCTION_CAP = 0.1; // s18A: capped at 10% of taxable income
@@ -11,14 +15,36 @@ const DONATIONS_DEDUCTION_CAP = 0.1; // s18A: capped at 10% of taxable income
 export type AssessmentInput = {
   taxYear?: string;
   age: number;
-  payslips: MonthlyPayslip[];
+  payslips: PayslipLineItem[];
   rentalProperties?: RentalProperty[];
   freelanceIncome?: number;
   interestIncome?: number;
   medicalSchemeMembers?: number;
+  hasDisability?: boolean;
+  /** Total annual medical scheme contributions, for the s6B additional credit */
+  annualMedicalContributions?: number;
+  /** Qualifying out-of-pocket medical expenses not covered by the scheme */
+  outOfPocketMedicalExpenses?: number;
   /** Retirement contributions paid outside payroll (e.g. a personal RA top-up) */
   additionalRetirementContributions?: number;
   donations?: number;
+  /** Business km reimbursed by an employer per km (not a fixed monthly allowance) */
+  businessKmTravelled?: number;
+  /** Rate per km the employer actually paid */
+  travelReimbursementRatePerKm?: number;
+  /** Floor area of a dedicated home office, in square metres */
+  homeOfficeAreaSqm?: number;
+  /** Total floor area of the home, in square metres */
+  totalHomeAreaSqm?: number;
+  /** Number of months in the tax year the home office was used for work */
+  monthsHomeOfficeUsed?: number;
+  /** Total qualifying home running costs for the year */
+  totalHomeExpenses?: number;
+  /** Amount received for a property disposal (e.g. selling a rental property) */
+  propertyDisposalProceeds?: number;
+  /** Purchase price plus qualifying improvements and acquisition/disposal costs */
+  propertyDisposalBaseCost?: number;
+  isPrimaryResidenceDisposal?: boolean;
   /** Manually entered SARS ITA34 tax payable, for the comparison view */
   sarsAssessedTaxPayable?: number;
 };
@@ -30,24 +56,33 @@ export type AssessmentResult = {
     rentalNet: number;
     freelance: number;
     taxableInterest: number;
+    taxableTravelReimbursement: number;
+    taxableCapitalGain: number;
+    /** Total income before the interest exemption is applied */
+    grossIncome: number;
+    /** Interest exemption applied (s10(1)(i)) */
+    exemptions: number;
     grossTotal: number;
   };
   deductions: {
     retirementDeductible: number;
     retirementExcess: number;
     donationsDeductible: number;
+    homeOfficeDeductible: number;
   };
+  hasHomeOfficeDeduction: boolean;
   taxableIncome: number;
   grossTax: number;
   rebate: number;
   medicalCredit: number;
+  additionalMedicalCredit: number;
   taxPayable: number;
   payeAlreadyPaid: number;
   /** Positive = amount owed to SARS, negative = refund due from SARS */
   balance: number;
   isLikelyProvisionalTaxpayer: boolean;
   rental: ReturnType<typeof calculateNetRentalIncome>;
-  payslipSummary: ReturnType<typeof summarizePayslips>;
+  payslipSummary: ReturnType<typeof summarizeLineItems>;
   sarsComparison: { sarsAssessedTaxPayable: number; difference: number } | null;
 };
 
@@ -67,17 +102,36 @@ function resolveTaxYearTable(taxYear: string | undefined): TaxYearTable {
 export function assessTax(input: AssessmentInput): AssessmentResult {
   const table = resolveTaxYearTable(input.taxYear);
 
-  const payslipSummary = summarizePayslips(input.payslips);
+  const payslipSummary = summarizeLineItems(input.payslips);
   const rental = calculateNetRentalIncome(input.rentalProperties ?? []);
   const freelanceIncome = input.freelanceIncome ?? 0;
+  const grossInterestIncome = input.interestIncome ?? 0;
   const taxableInterest = calculateTaxableInterest(
-    input.interestIncome ?? 0,
+    grossInterestIncome,
     input.age,
     table.interestExemption,
   );
+  const exemptions = grossInterestIncome - taxableInterest;
+  const taxableTravelReimbursement = calculateTaxableTravelReimbursement(
+    input.businessKmTravelled ?? 0,
+    input.travelReimbursementRatePerKm ?? 0,
+    table.travelReimbursement,
+  );
+  const { taxableCapitalGain } = calculateTaxableCapitalGain({
+    proceeds: input.propertyDisposalProceeds ?? 0,
+    baseCost: input.propertyDisposalBaseCost ?? 0,
+    isPrimaryResidence: input.isPrimaryResidenceDisposal ?? false,
+    table: table.capitalGains,
+  });
 
-  const grossTotal =
-    payslipSummary.totalGrossSalary + rental.netIncome + freelanceIncome + taxableInterest;
+  const grossIncome =
+    payslipSummary.totalGrossSalary +
+    rental.netIncome +
+    freelanceIncome +
+    grossInterestIncome +
+    taxableTravelReimbursement +
+    taxableCapitalGain;
+  const grossTotal = grossIncome - exemptions;
 
   const totalRetirementContributions =
     payslipSummary.totalRetirementContribution +
@@ -91,7 +145,14 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
       table: table.retirementDeduction,
     });
 
-  const incomeAfterRetirement = grossTotal - retirementDeductible;
+  const { deductible: homeOfficeDeductible } = calculateHomeOfficeDeduction({
+    officeAreaSqm: input.homeOfficeAreaSqm ?? 0,
+    totalHomeAreaSqm: input.totalHomeAreaSqm ?? 0,
+    monthsUsed: input.monthsHomeOfficeUsed ?? 0,
+    totalHomeExpenses: input.totalHomeExpenses ?? 0,
+  });
+
+  const incomeAfterRetirement = grossTotal - retirementDeductible - homeOfficeDeductible;
   const donations = input.donations ?? 0;
   const donationsDeductible = Math.min(
     donations,
@@ -106,8 +167,20 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
     input.medicalSchemeMembers ?? 0,
     table.medicalCredit,
   );
+  const additionalMedicalCredit = calculateAdditionalMedicalCredit({
+    age: input.age,
+    hasDisability: input.hasDisability ?? false,
+    annualContributions: input.annualMedicalContributions ?? 0,
+    annualMedicalCredit: medicalCredit,
+    outOfPocketExpenses: input.outOfPocketMedicalExpenses ?? 0,
+    taxableIncomeBeforeCredit: taxableIncome,
+    table: table.additionalMedicalCredit,
+  });
 
-  const taxPayable = Math.max(grossTax - rebate - medicalCredit, 0);
+  const taxPayable = Math.max(
+    grossTax - rebate - medicalCredit - additionalMedicalCredit,
+    0,
+  );
   const payeAlreadyPaid = payslipSummary.totalPayeDeducted;
   const balance = taxPayable - payeAlreadyPaid;
 
@@ -126,17 +199,24 @@ export function assessTax(input: AssessmentInput): AssessmentResult {
       rentalNet: rental.netIncome,
       freelance: freelanceIncome,
       taxableInterest,
+      taxableTravelReimbursement,
+      taxableCapitalGain,
+      grossIncome,
+      exemptions,
       grossTotal,
     },
     deductions: {
       retirementDeductible,
       retirementExcess,
       donationsDeductible,
+      homeOfficeDeductible,
     },
+    hasHomeOfficeDeduction: homeOfficeDeductible > 0,
     taxableIncome,
     grossTax,
     rebate,
     medicalCredit,
+    additionalMedicalCredit,
     taxPayable,
     payeAlreadyPaid,
     balance,

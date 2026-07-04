@@ -32,6 +32,32 @@ export type TaxYearTable = {
     under65: number;
     age65Plus: number;
   };
+  /** Additional medical expenses tax credit (s6B) formula inputs */
+  additionalMedicalCredit: {
+    /** Contribution multiplier used for taxpayers under 65 without a disability */
+    contributionMultiplierStandard: number;
+    /** Contribution multiplier used for taxpayers 65+ or with a disability */
+    contributionMultiplierSimplified: number;
+    /** Credit rate applied for taxpayers under 65 without a disability */
+    rateStandard: number;
+    /** Credit rate applied for taxpayers 65+ or with a disability */
+    rateSimplified: number;
+    /** Portion of taxable income subtracted as a floor, standard formula only */
+    taxableIncomeFloorPercentage: number;
+  };
+  /** Reimbursive travel allowance - SARS's tax-free rate per business km */
+  travelReimbursement: {
+    prescribedRatePerKm: number;
+  };
+  /** Capital gains tax on disposals (e.g. selling a rental property) */
+  capitalGains: {
+    /** Portion of the net gain included in taxable income */
+    inclusionRate: number;
+    /** Annual exclusion applied to the net gain before inclusion */
+    annualExclusion: number;
+    /** Additional exclusion for the gain on a primary residence */
+    primaryResidenceExclusion: number;
+  };
 };
 
 /**
@@ -72,24 +98,38 @@ export const TAX_YEAR_2025_26: TaxYearTable = {
     under65: 23_800,
     age65Plus: 34_500,
   },
+  additionalMedicalCredit: {
+    contributionMultiplierStandard: 4,
+    contributionMultiplierSimplified: 3,
+    rateStandard: 0.25,
+    rateSimplified: 1 / 3,
+    taxableIncomeFloorPercentage: 0.075,
+  },
+  travelReimbursement: {
+    prescribedRatePerKm: 4.76,
+  },
+  capitalGains: {
+    inclusionRate: 0.4,
+    annualExclusion: 40_000,
+    primaryResidenceExclusion: 2_000_000,
+  },
 };
 
 /**
  * 2026/27 tax year (1 Mar 2026 - 28 Feb 2027) - first inflationary bracket
- * adjustment (+3.4%) since 2023/24. Full bracket table pending confirmation
- * against the official Budget 2026 Tax Guide; rebates/thresholds below are
- * confirmed. Retirement deduction cap rises to R430,000 from this year.
+ * adjustment (+3.4%) since 2023/24. Confirmed against published SARS/Budget
+ * 2026 figures. Retirement deduction cap rises to R430,000 from this year.
  */
 export const TAX_YEAR_2026_27: TaxYearTable = {
   year: "2026/27",
   brackets: [
     { min: 0, max: 245_100, rate: 0.18, base: 0 },
-    { min: 245_100, max: 383_000, rate: 0.26, base: 44_118 },
-    { min: 383_000, max: 530_000, rate: 0.31, base: 80_112 },
-    { min: 530_000, max: 696_100, rate: 0.36, base: 125_682 },
-    { min: 696_100, max: 889_400, rate: 0.39, base: 185_478 },
-    { min: 889_400, max: 1_879_800, rate: 0.41, base: 260_865 },
-    { min: 1_879_800, max: Infinity, rate: 0.45, base: 667_129 },
+    { min: 245_100, max: 383_100, rate: 0.26, base: 44_118 },
+    { min: 383_100, max: 530_200, rate: 0.31, base: 79_998 },
+    { min: 530_200, max: 695_800, rate: 0.36, base: 125_599 },
+    { min: 695_800, max: 887_000, rate: 0.39, base: 185_215 },
+    { min: 887_000, max: 1_878_600, rate: 0.41, base: 259_783 },
+    { min: 1_878_600, max: Infinity, rate: 0.45, base: 666_339 },
   ],
   rebates: {
     primary: 17_820,
@@ -112,6 +152,25 @@ export const TAX_YEAR_2026_27: TaxYearTable = {
   interestExemption: {
     under65: 23_800,
     age65Plus: 34_500,
+  },
+  additionalMedicalCredit: {
+    contributionMultiplierStandard: 4,
+    contributionMultiplierSimplified: 3,
+    rateStandard: 0.25,
+    rateSimplified: 1 / 3,
+    taxableIncomeFloorPercentage: 0.075,
+  },
+  travelReimbursement: {
+    // Not yet gazetted for 2026/27 at time of writing; carried over from
+    // 2025/26 pending SARS's published update.
+    prescribedRatePerKm: 4.76,
+  },
+  capitalGains: {
+    inclusionRate: 0.4,
+    // Budget 2026 raised these from R40,000 and R2,000,000 respectively,
+    // effective for disposals from 1 March 2026.
+    annualExclusion: 50_000,
+    primaryResidenceExclusion: 3_000_000,
   },
 };
 

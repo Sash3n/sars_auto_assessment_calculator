@@ -17,6 +17,9 @@ describe("AssessmentWizard", () => {
     expect(screen.getByText("Rental & property income")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByText("Other deductions")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByText("Full breakdown")).toBeInTheDocument();
   });
 
@@ -29,8 +32,19 @@ describe("AssessmentWizard", () => {
     await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getByRole("button", { name: "Next" }));
 
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+  });
+
+  it("jumps directly to a step via the sidebar nav", async () => {
+    const user = userEvent.setup();
+    render(<AssessmentWizard />);
+
+    const resultsButtons = screen.getAllByRole("button", { name: "Results" });
+    await user.click(resultsButtons[0]);
+
+    expect(screen.getByText("Full breakdown")).toBeInTheDocument();
   });
 
   it("flows entered salary data through to the results step", async () => {
@@ -40,11 +54,12 @@ describe("AssessmentWizard", () => {
     await user.type(screen.getByLabelText("Age"), "35");
     await user.click(screen.getByRole("button", { name: "Next" }));
 
-    await user.type(screen.getByLabelText("March grossSalary"), "50000");
-    await user.click(screen.getByRole("button", { name: "Next" }));
-    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getAllByText("+ Add employer")[0]);
+    await user.type(screen.getByLabelText("March basic_salary"), "50000");
 
-    // Only one month of income entered - taxable income should reflect it
+    const resultsButtons = screen.getAllByRole("button", { name: "Results" });
+    await user.click(resultsButtons[0]);
+
     expect(screen.getByText("Full breakdown")).toBeInTheDocument();
     expect(screen.getAllByText(/R\s?50\s?000/).length).toBeGreaterThan(0);
   });

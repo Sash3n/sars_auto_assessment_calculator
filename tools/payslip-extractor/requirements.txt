@@ -1,0 +1,7 @@
+pdfplumber>=0.11
+pytesseract>=0.3
+opencv-python-headless>=4.9
+pdf2image>=1.17
+Pillow>=11
+jsonschema>=4.20
+pytest>=8
